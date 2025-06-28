@@ -1,0 +1,52 @@
+# requirements.txt
+#
+# Python package requirements for CyberSec Alert SaaS.
+#
+# - Lists all dependencies needed for development, testing, and production.
+# - Pin versions for reproducibility and compatibility.
+# - Grouped by purpose (web, database, auth, email, etc).
+
+# FastAPI and ASGI server
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+
+# Database
+sqlalchemy==2.0.30
+alembic==1.13.1
+aiosqlite==0.20.0       # Async SQLite driver
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
+
+# HTTP client for API calls
+httpx==0.27.0
+aiohttp==3.9.5
+
+# Email
+requests==2.32.3  # For Mailgun API and GitHub OAuth
+
+# Environment and configuration
+python-dotenv==1.0.1
+pydantic==2.7.1
+pydantic-settings==2.3.0 # Added pydantic-settings
+
+# Scheduling
+apscheduler==3.10.4
+
+# Data parsing and validation
+beautifulsoup4==4.12.3
+lxml==5.2.2
+
+# Stripe integration
+stripe==9.7.0
+
+# Testing
+pytest==8.2.1
+pytest-asyncio==0.23.6
+
+# Development
+black==24.4.2
+flake8==7.0.0
+isort==5.13.2
