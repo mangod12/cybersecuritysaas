@@ -3,271 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberSec Alert SaaS - Vulnerability Monitoring Dashboard</title>
+    <title>CyberSec Alert SaaS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;         
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(120deg, #f8f9fa 0%, #e0e7ff 100%);
-            color: #333;
             min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
+            margin: 0;
         }
-
-        /* Animated floating shapes */
-        body::before, body::after {
-            content: '';
-            position: fixed;
-            z-index: 0;
-            border-radius: 50%;
-            opacity: 0.15;
-            pointer-events: none;
-            animation: float 12s ease-in-out infinite alternate;
-        }
-        body::before {
-            width: 400px; height: 400px;
-            background: #667eea;
-            top: -100px; left: -100px;
-            animation-delay: 0s;
-        }
-        body::after {
-            width: 300px; height: 300px;
-            background: #764ba2;
-            bottom: -80px; right: -80px;
-            animation-delay: 3s;
-        }
-        @keyframes float {
-            0% { transform: translateY(0) scale(1);}
-            100% { transform: translateY(40px) scale(1.08);}
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2.5rem 0 2rem 0;
-            text-align: center;
-            margin-bottom: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 6px 32px rgba(102,126,234,0.12);
-            position: relative;
-            overflow: hidden;
-        }
-        .header h1 {
-            font-size: 2.5rem;
-            letter-spacing: 1px;
-            margin-bottom: 0.5rem;
-        }
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.95;
-        }
-
-        .auth-section {
-            width: 370px;
-            margin: 40px auto 2.5rem auto;
-            background: linear-gradient(180deg, #eaf6ff 0%, #fff 100%);
-            border-radius: 24px;
-            box-shadow: 0 8px 32px rgba(102,126,234,0.10), 0 1.5px 8px rgba(0,0,0,0.04);
-            padding: 2.5rem 2rem 2rem 2rem;
+        .centered {
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
-            z-index: 2;
-        }
-
-        .auth-section h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            text-align: center;
-        }
-
-        .auth-section .form-group {
-            margin-bottom: 1.1rem;
-            width: 100%;
-        }
-
-        .auth-section input[type="email"],
-        .auth-section input[type="password"],
-        .auth-section input[type="text"] {
-            width: 100%;
-            padding: 0.9rem 1rem;
-            border: none;
-            border-radius: 10px;
-            background: #f3f6fa;
-            font-size: 1rem;
-            margin-bottom: 0.2rem;
-            box-shadow: 0 1px 2px rgba(102,126,234,0.04);
-            transition: box-shadow 0.2s;
-        }
-
-        .auth-section input:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px #667eea33;
-        }
-
-        .auth-section button[type="submit"] {
-            width: 100%;
-            background: linear-gradient(90deg, #232526 0%, #414345 100%);
-            color: #fff;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 10px;
-            padding: 0.9rem 0;
-            margin-top: 0.5rem;
-            margin-bottom: 1.2rem;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.08);
-            transition: background 0.2s, transform 0.15s;
-        }
-        .auth-section button[type="submit"]:hover {
-            background: linear-gradient(90deg, #232526 0%, #667eea 100%);
-            transform: translateY(-2px) scale(1.03);
-        }
-
-        .social-login-row {
-            display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin-top: 0.5rem;
-            margin-bottom: 0.5rem;
-            width: 100%;
+            min-height: 100vh;
         }
-
-        .social-btn {
-            flex: 1 1 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .card {
             background: #fff;
-            border: 1.5px solid #e0e7ef;
-            border-radius: 8px;
-            padding: 0.6rem 0;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: box-shadow 0.18s, border 0.18s;
-            box-shadow: 0 1px 4px rgba(102,126,234,0.04);
-        }
-        .social-btn:hover {
-            border: 1.5px solid #667eea;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.10);
-            background: #f3f6fa;
-        }
-
-        .social-btn img {
-            width: 22px;
-            height: 22px;
-            margin-right: 0.5rem;
-        }
-
-        .or-divider {
-            width: 100%;
-            text-align: center;
-            color: #b0b8c1;
-            font-size: 0.95rem;
-            margin: 0.7rem 0 0.5rem 0;
-            position: relative;
-        }
-        .or-divider:before, .or-divider:after {
-            content: "";
-            display: inline-block;
-            width: 35%;
-            height: 1px;
-            background: #e0e7ef;
-            vertical-align: middle;
-            margin: 0 0.5rem;
-        }
-
-        .dashboard {
-            display: none;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.2rem;
-            margin-bottom: 2.5rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.7rem 1.2rem;
             border-radius: 12px;
-            box-shadow: 0 2px 16px rgba(102,126,234,0.08);
-            text-align: center;
-            position: relative;
-            transition: transform 0.18s, box-shadow 0.18s;
-            cursor: pointer;
+            box-shadow: 0 4px 24px rgba(102,126,234,0.10);
+            padding: 2.5rem 2rem 2rem 2rem;
+            min-width: 340px;
+            max-width: 95vw;
         }
-        .stat-card:hover {
-            transform: translateY(-6px) scale(1.03);
-            box-shadow: 0 8px 32px rgba(102,126,234,0.16);
+        .input-group {
+            margin-bottom: 1.2rem;
         }
-        .stat-number {
-            font-size: 2.2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            letter-spacing: 1px;
-        }
-        .critical { color: #dc3545; }
-        .high { color: #fd7e14; }
-        .medium { color: #ffc107; }
-        .low { color: #28a745; }
-
-        .section {
-            background: white;
-            padding: 1.7rem 1.2rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 16px rgba(102,126,234,0.08);
-            margin-bottom: 2.5rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .form-group {
-            margin-bottom: 1.1rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #667eea;
-            letter-spacing: 0.2px;
-        }
-
-        input, select, textarea {
+        input[type="email"], input[type="password"], input[type="text"], select {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.8rem 1rem;
             border: 1.5px solid #e0e7ff;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 1rem;
             background: #f8faff;
-            transition: border 0.2s, box-shadow 0.2s;
+            margin-bottom: 0.2rem;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus {
             outline: none;
-        }
-        input:focus, select:focus, textarea:focus {
             border-color: #667eea;
-            box-shadow: 0 0 0 2px #667eea33;
         }
-
-        button {
+        button, .btn {
             background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 0.75rem 1.7rem;
@@ -276,784 +54,405 @@
             cursor: pointer;
             font-size: 1rem;
             font-weight: 500;
-            transition: background 0.3s, transform 0.15s, box-shadow 0.15s;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            width: 100%;
+            box-sizing: border-box;
         }
-        button:hover, button:focus {
+        button:hover, .btn:hover {
             background: linear-gradient(90deg, #5a6fd8 0%, #6d3fa2 100%);
-            transform: translateY(-2px) scale(1.04);
-            box-shadow: 0 4px 16px rgba(102,126,234,0.16);
         }
-
-        .btn-secondary {
-            background: #6c757d;
-            background: linear-gradient(90deg, #6c757d 0%, #868e96 100%);
-        }
-        .btn-secondary:hover, .btn-secondary:focus {
-            background: linear-gradient(90deg, #5a6268 0%, #6c757d 100%);
-        }
-
-        .btn-danger {
+        .logout-btn {
+            position: absolute;
+            top: 24px;
+            right: 32px;
             background: #dc3545;
-            background: linear-gradient(90deg, #dc3545 0%, #e4606d 100%);
+            color: #fff;
+            border-radius: 6px;
+            padding: 0.5rem 1.2rem;
+            font-weight: 500;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            width: auto;
         }
-        .btn-danger:hover, .btn-danger:focus {
-            background: linear-gradient(90deg, #c82333 0%, #dc3545 100%);
+        .logout-btn:hover {
+            background: #b52a37;
         }
-
+        .dashboard-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 6px 32px rgba(102,126,234,0.12);
+            padding: 2.5rem 2rem 2rem 2rem;
+            position: relative;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
         .alert {
             padding: 1rem;
             border-radius: 6px;
             margin-bottom: 1rem;
             font-weight: 500;
-            box-shadow: 0 2px 8px rgba(220,53,69,0.06);
-            animation: fadeIn 0.5s;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px);}
-            to { opacity: 1; transform: translateY(0);}
-        }
-        .alert-success {
-            background-color: #d4edda;
-            border: 1.5px solid #c3e6cb;
-            color: #155724;
-        }
-        .alert-error {
-            background-color: #f8d7da;
-            border: 1.5px solid #f5c6cb;
+            background: #f8d7da;
             color: #721c24;
+            border: 1.5px solid #f5c6cb;
         }
-
-        .table {
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1.5px solid #c3e6cb;
+        }
+        .stats {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.2rem 2rem;
+            text-align: center;
+            flex: 1;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+        }
+        .stat-title {
+            font-size: 1.1rem;
+            color: #667eea;
+            margin-bottom: 0.3rem;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 2rem;
+        }
+        .section h3 {
+            margin-bottom: 1rem;
+        }
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1rem;
-            background: #fff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.06);
+            margin-bottom: 1rem;
         }
-        .table th,
-        .table td {
-            padding: 0.85rem;
-            text-align: left;
+        th, td {
+            padding: 0.7rem 0.5rem;
             border-bottom: 1px solid #e0e7ff;
+            text-align: left;
         }
-        .table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
+        th {
+            background: #f8f9fa;
             color: #667eea;
         }
-
-        .severity-badge {
-            padding: 0.3rem 0.7rem;
-            border-radius: 4px;
-            color: white;
-            font-size: 0.82rem;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-            transition: background 0.2s;
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            margin: 0.2rem;
+            width: auto;
         }
-
-        .tabs {
-            display: flex;
-            margin-bottom: 1.2rem;
-            z-index: 1;
-            position: relative;
-        }
-        .tab {
-            padding: 0.75rem 1.7rem;
-            background: #e9ecef;
-            border: none;
-            cursor: pointer;
-            border-radius: 8px 8px 0 0;
-            margin-right: 0.25rem;
-            font-weight: 500;
-            color: #667eea;
-            transition: background 0.2s, color 0.2s;
-            outline: none;
-            position: relative;
-            z-index: 1;
-        }
-        .tab.active {
-            background: white;
-            color: #764ba2;
-            border-bottom: 2.5px solid #667eea;
-            z-index: 2;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.06);
-        }
-        .tab:not(.active):hover {
-            background: #f1f3f8;
-            color: #5a6fd8;
-        }
-
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.5s;
-        }
-        .tab-content.active {
-            display: block;
-        }
-
         .loading {
-            display: none;
             text-align: center;
             padding: 2rem;
+            color: #667eea;
         }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg);}
-            100% { transform: rotate(360deg);}
-        }
-
-        /* Modal fade-in animation */
-        #edit-asset-modal[style*="display: flex"] {
-            animation: modalFadeIn 0.4s;
-        }
-        @keyframes modalFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Responsive improvements */
         @media (max-width: 700px) {
-            .header h1 { font-size: 1.5rem; }
-            .header p { font-size: 1rem; }
-            .container { padding: 8px; }
-            .auth-section, .section { padding: 1rem; }
-            .stats-grid { grid-template-columns: 1fr; }
-        }
-
-        .social-btn.github {
-            background: #181717 !important;
-            color: #fff !important;
-            border: 1.5px solid #181717 !important;
-        }
-        .social-btn.github:hover {
-            background: #000 !important;
-            color: #fff !important;
-            border: 1.5px solid #000 !important;
+            .dashboard-header { flex-direction: column; gap: 1rem; }
+            .stats { flex-direction: column; gap: 1rem; }
+            .dashboard-container { padding: 1rem; }
+            .card { min-width: unset; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🛡️ CyberSec Alert SaaS</h1>
-            <p>Stay ahead of vulnerabilities with real-time security monitoring</p>
-        </div>
+<div id="app"></div>
+<script>
+const API_BASE = '/api/v1';
+let authToken = localStorage.getItem('authToken');
 
-        <!-- Authentication Section -->
-        <div id="auth-section" class="auth-section">
-            <div class="tabs">
-                <button class="tab active" onclick="showAuthTab('login')">Login</button>
-                <button class="tab" onclick="showAuthTab('register')">Register</button>
-            </div>
+function showAlert(message, type = '') {
+    const app = document.getElementById('app');
+    let alertDiv = document.createElement('div');
+    alertDiv.className = 'alert' + (type ? ' ' + type : '');
+    alertDiv.textContent = message;
+    app.prepend(alertDiv);
+    setTimeout(() => alertDiv.remove(), 4000);
+}
 
-            <!-- Login Form -->
-<div id="login-tab" class="tab-content active">
-    <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:1.2rem;">
-        <div style="background:#f3f6fa; border-radius:16px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; margin-bottom:1rem;">
-            <span style="font-size:2rem;">&#x1F511;</span>
+function renderLogin(showRegister = false) {
+    document.getElementById('app').innerHTML = `
+    <div class="centered">
+      <div class="card">
+        <h2 style="text-align:center; margin-bottom:1.5rem;">CyberSec Alert SaaS</h2>
+        <div id="login-register-toggle" style="text-align:center; margin-bottom:1rem;">
+          <button id="show-login-btn" style="width:auto;${showRegister ? '' : ' background:#667eea;'}">Login</button>
+          <button id="show-register-btn" style="width:auto;${showRegister ? ' background:#667eea;' : ''}">Register</button>
         </div>
-        <h2>Sign in with email</h2>
+        <form id="login-form" style="display:${showRegister ? 'none' : 'block'};">
+          <div class="input-group">
+            <input type="email" id="login-email" placeholder="Email" required autocomplete="username">
+          </div>
+          <div class="input-group">
+            <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
+          </div>
+          <button type="submit">Login</button>
+        </form>
+        <form id="register-form" style="display:${showRegister ? 'block' : 'none'};">
+          <div class="input-group">
+            <input type="email" id="register-email" placeholder="Email" required autocomplete="username">
+          </div>
+          <div class="input-group">
+            <input type="password" id="register-password" placeholder="Password" required autocomplete="new-password">
+          </div>
+          <div class="input-group">
+            <input type="text" id="register-fullname" placeholder="Full Name" autocomplete="name">
+          </div>
+          <div class="input-group">
+            <input type="text" id="register-company" placeholder="Company" autocomplete="organization">
+          </div>
+          <button type="submit">Register</button>
+        </form>
+      </div>
     </div>
-    <form id="login-form" style="width:100%;">
-        <div class="form-group">
-            <input type="email" id="login-email" placeholder="Email" required>
-        </div>
-        <div class="form-group" style="position:relative;">
-            <input type="password" id="login-password" placeholder="Password" required>
-            <!-- Optionally add an eye icon for show/hide password -->
-        </div>
-        <button type="submit">Get Started</button>
-    </form>
-    <div class="or-divider">Or sign in with</div>
-    <div class="social-login" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 1rem;">
-        <button class="social-btn github" onclick="githubLogin()" type="button">
-            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" alt="GitHub" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;" />
-            Login with GitHub
-        </button>
-    </div>
-</div>
-            <!-- Register Form -->
-<div id="register-tab" class="tab-content">
-    <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:1.2rem;">
-        <div style="background:#f3f6fa; border-radius:16px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; margin-bottom:1rem;">
-            <span style="font-size:2rem;">&#x1F465;</span>
-        </div>
-        <h2>Create your account</h2>
-        <div style="color:#6c6c6c; font-size:1rem; text-align:center; margin-bottom:1.2rem;">
-            Join us to monitor your assets and stay secure.
-        </div>
-    </div>
-    <form id="register-form" style="width:100%;">
-        <div class="form-group">
-            <input type="email" id="register-email" placeholder="Email" required>
-        </div>
-        <div class="form-group">
-            <input type="password" id="register-password" placeholder="Password" required>
-        </div>
-        <div class="form-group">
-            <input type="text" id="register-name" placeholder="Full Name">
-        </div>
-        <div class="form-group">
-            <input type="text" id="register-company" placeholder="Company">
-        </div>
-        <button type="submit">Get Started</button>
-    </form>
-    <div class="or-divider">Or sign up with</div>
-    <div class="social-login-row">
-        <button class="social-btn github" onclick="githubLogin()" type="button">
-            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" alt="GitHub" />
-        </button>
-    </div>
-</div>
-
-        <!-- Dashboard Section -->
-        <div id="dashboard" class="dashboard">
-            <div class="section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2>Welcome, <span id="user-name">User</span></h2>
-                    <button onclick="logout()" class="btn-secondary">Logout</button>
-                </div>
-            </div>
-
-            <!-- Statistics Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number critical" id="critical-alerts">0</div>
-                    <div>Critical Alerts</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number high" id="high-alerts">0</div>
-                    <div>High Alerts</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number medium" id="medium-alerts">0</div>
-                    <div>Medium Alerts</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number low" id="low-alerts">0</div>
-                    <div>Low Alerts</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="total-assets">0</div>
-                    <div>Total Assets</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="pending-alerts">0</div>
-                    <div>Pending Alerts</div>
-                </div>
-            </div>
-
-            <!-- Main Content Tabs -->
-            <div class="section">
-                <div class="tabs">
-                    <button class="tab active" onclick="showDashboardTab('alerts')">Recent Alerts</button>
-                    <button class="tab" onclick="showDashboardTab('assets')">My Assets</button>
-                    <button class="tab" onclick="showDashboardTab('add-asset')">Add Asset</button>
-                </div>
-
-                <!-- Alerts Tab -->
-                <div id="alerts-tab" class="tab-content active">
-                    <h3>Recent Security Alerts</h3>
-
-                    <!-- Alert Filters -->
-                    <div id="alert-filters" style="margin-bottom: 1rem; padding: 1rem; background-color: #f8f9fa; border-radius: 5px; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
-                        <div class="form-group" style="flex-basis: 200px;">
-                            <label for="alert-severity-filter" style="margin-bottom: 0.25rem;">Severity:</label>
-                            <select id="alert-severity-filter">
-                                <option value="">All Severities</option>
-                                <option value="critical">Critical</option>
-                                <option value="high">High</option>
-                                <option value="medium">Medium</option>
-                                <option value="low">Low</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex-basis: 200px;">
-                            <label for="alert-status-filter" style="margin-bottom: 0.25rem;">Status:</label>
-                            <select id="alert-status-filter">
-                                <option value="">All Statuses</option>
-                                <option value="pending">Pending</option>
-                                <option value="acknowledged">Acknowledged</option>
-                                <option value="resolved">Resolved</option> <!-- Assuming resolved is a status -->
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex-basis: 200px;">
-                            <label for="alert-asset-id-filter" style="margin-bottom: 0.25rem;">Asset ID:</label>
-                            <input type="number" id="alert-asset-id-filter" placeholder="e.g., 123">
-                        </div>
-                        <div class="form-group" style="flex-basis: 200px;">
-                            <label for="alert-cve-id-filter" style="margin-bottom: 0.25rem;">CVE ID:</label>
-                            <input type="text" id="alert-cve-id-filter" placeholder="e.g., CVE-2023-12345">
-                        </div>
-                        <button id="apply-alert-filters-btn" style="align-self: flex-end;">Apply Filters</button>
-                    </div>
-
-                    <div id="alerts-loading" class="loading">
-                        <div class="spinner"></div>
-                        <p>Loading alerts...</p>
-                    </div>
-                    <div id="alerts-list"></div>
-                     <!-- Alert Pagination -->
-                    <div id="alert-pagination" style="margin-top: 1rem; text-align: center;">
-                        <button id="alert-prev-page-btn" disabled>Previous</button>
-                        <span id="alert-page-info" style="margin: 0 1rem;">Page 1 of 1</span>
-                        <button id="alert-next-page-btn" disabled>Next</button>
-                    </div>
-                </div>
-
-                <!-- Assets Tab -->
-                <div id="assets-tab" class="tab-content">
-                    <h3>Your Monitored Assets</h3>
-
-                    <!-- Asset Filters -->
-                    <div id="asset-filters" style="margin-bottom: 1rem; padding: 1rem; background-color: #f8f9fa; border-radius: 5px; display: flex; gap: 1rem; align-items: center;">
-                        <div class="form-group" style="flex-grow: 1;">
-                            <label for="asset-search-filter" style="margin-bottom: 0.25rem;">Search:</label>
-                            <input type="text" id="asset-search-filter" placeholder="Name, vendor, product...">
-                        </div>
-                        <div class="form-group">
-                            <label for="asset-type-filter" style="margin-bottom: 0.25rem;">Type:</label>
-                            <select id="asset-type-filter">
-                                <option value="">All Types</option>
-                                <option value="hardware">Hardware</option>
-                                <option value="software">Software</option>
-                                <option value="firmware">Firmware</option>
-                                <option value="operating_system">Operating System</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="asset-vendor-filter" style="margin-bottom: 0.25rem;">Vendor:</label>
-                            <input type="text" id="asset-vendor-filter" placeholder="e.g., Cisco">
-                        </div>
-                        <button id="apply-asset-filters-btn" style="align-self: flex-end;">Apply Filters</button>
-                    </div>
-
-                    <div id="assets-loading" class="loading">
-                        <div class="spinner"></div>
-                        <p>Loading assets...</p>
-                    </div>
-                    <div id="assets-list"></div>
-
-                    <!-- Asset Pagination -->
-                    <div id="asset-pagination" style="margin-top: 1rem; text-align: center;">
-                        <button id="asset-prev-page-btn" disabled>Previous</button>
-                        <span id="asset-page-info" style="margin: 0 1rem;">Page 1 of 1</span>
-                        <button id="asset-next-page-btn" disabled>Next</button>
-                    </div>
-                </div>
-
-                <!-- Add Asset Tab -->
-                <div id="add-asset-tab" class="tab-content">
-                    <h3>Add New Asset to Monitor</h3>
-                    <form id="asset-form">
-                        <div class="form-group">
-                            <label for="asset-name">Asset Name:</label>
-                            <input type="text" id="asset-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="asset-type">Asset Type:</label>
-                            <select id="asset-type" required>
-                                <option value="">Select type...</option>
-                                <option value="hardware">Hardware</option>
-                                <option value="software">Software</option>
-                                <option value="firmware">Firmware</option>
-                                <option value="operating_system">Operating System</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="asset-vendor">Vendor:</label>
-                            <input type="text" id="asset-vendor">
-                        </div>
-                        <div class="form-group">
-                            <label for="asset-product">Product:</label>
-                            <input type="text" id="asset-product">
-                        </div>
-                        <div class="form-group">
-                            <label for="asset-version">Version:</label>
-                            <input type="text" id="asset-version">
-                        </div>
-                        <div class="form-group">
-                            <label for="asset-description">Description:</label>
-                            <textarea id="asset-description" rows="3"></textarea>
-                        </div>
-                        <button type="submit">Add Asset</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Edit Asset Modal -->
-        <div id="edit-asset-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
-            <div style="background:white; padding:2rem; border-radius:10px; width:90%; max-width:500px;">
-                <h2>Edit Asset</h2>
-                <form id="edit-asset-form">
-                    <input type="hidden" id="edit-asset-id">
-                    <div class="form-group">
-                        <label for="edit-asset-name">Asset Name:</label>
-                        <input type="text" id="edit-asset-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-asset-type">Asset Type:</label>
-                        <select id="edit-asset-type" required>
-                            <option value="">Select type...</option>
-                            <option value="hardware">Hardware</option>
-                            <option value="software">Software</option>
-                            <option value="firmware">Firmware</option>
-                            <option value="operating_system">Operating System</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-asset-vendor">Vendor:</label>
-                        <input type="text" id="edit-asset-vendor">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-asset-product">Product:</label>
-                        <input type="text" id="edit-asset-product">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-asset-version">Version:</label>
-                        <input type="text" id="edit-asset-version">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-asset-description">Description:</label>
-                        <textarea id="edit-asset-description" rows="3"></textarea>
-                    </div>
-                    <button type="submit">Save Changes</button>
-                    <button type="button" onclick="closeEditAssetModal()" class="btn-secondary">Cancel</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Alert Messages -->
-        <div id="alert-messages"></div>
-    </div>
-
-    <script>
-        // API Configuration
-        const API_BASE = '/api/v1';
-        let authToken = localStorage.getItem('authToken');
-
-        // Configure axios defaults
-        if (authToken) {
+    `;
+    
+    document.getElementById('show-login-btn').onclick = () => renderLogin(false);
+    document.getElementById('show-register-btn').onclick = () => renderLogin(true);
+    
+    document.getElementById('login-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        try {
+            const formData = new FormData();
+            formData.append('username', email);
+            formData.append('password', password);
+            const response = await axios.post(`${API_BASE}/auth/login`, formData, {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+            authToken = response.data.access_token;
+            localStorage.setItem('authToken', authToken);
             axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+            showAlert('Login successful!', 'success');
+            renderDashboard();
+        } catch (error) {
+            showAlert('Login failed: ' + (error.response?.data?.detail || 'Unknown error'));
         }
-
-        // Show authentication tab
-        function showAuthTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById(`${tab}-tab`).classList.add('active');
-        }
-
-        // Show dashboard tab
-        function showDashboardTab(tab) {
-            document.querySelectorAll('#dashboard .tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('#dashboard .tab-content').forEach(t => t.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById(`${tab}-tab`).classList.add('active');
-            
-            if (tab === 'alerts') loadAlerts();
-            if (tab === 'assets') loadAssets();
-        }
-
-        // Show alert message
-        function showAlert(message, type = 'success') {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.textContent = message;
-            
-            const container = document.getElementById('alert-messages');
-            container.appendChild(alertDiv);
-            
-            setTimeout(() => {
-                container.removeChild(alertDiv);
-            }, 5000);
-        }
-
-        // Login
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
-            try {
-                const response = await axios.post(`${API_BASE}/auth/login`, {
-                    username: email,
-                    password: password
-                }, {
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
-                });
-                
-                authToken = response.data.access_token;
-                localStorage.setItem('authToken', authToken);
-                axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
-                
-                await loadUserProfile();
-                showDashboard();
-                showAlert('Login successful!');
-                
-            } catch (error) {
-                showAlert('Login failed: ' + (error.response?.data?.detail || 'Unknown error'), 'error');
-            }
-        });
-
-        // Register
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const userData = {
-                email: document.getElementById('register-email').value,
-                password: document.getElementById('register-password').value,
-                full_name: document.getElementById('register-name').value,
-                company: document.getElementById('register-company').value
+    };
+    
+    document.getElementById('register-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        const fullName = document.getElementById('register-fullname').value;
+        const company = document.getElementById('register-company').value;
+        try {
+            const regData = {
+                email: email,
+                password: password,
+                full_name: fullName,
+                company: company
             };
-            
-            try {
-                await axios.post(`${API_BASE}/auth/register`, userData);
-                showAlert('Registration successful! Please login.');
-                showAuthTab('login');
-                
-            } catch (error) {
-                showAlert('Registration failed: ' + (error.response?.data?.detail || 'Unknown error'), 'error');
-            }
-        });
+            await axios.post(`${API_BASE}/auth/register`, regData);
+            showAlert('Registration successful! Please log in.', 'success');
+            renderLogin(false);
+        } catch (error) {
+            showAlert('Registration failed: ' + (error.response?.data?.detail || 'Unknown error'));
+        }
+    };
+}
 
-        // Add Asset
-        document.getElementById('asset-form').addEventListener('submit', async (e) => {
+async function fetchProfile() {
+    try {
+        const response = await axios.get(`${API_BASE}/auth/me`);
+        return response.data;
+    } catch (error) {
+        logout();
+        throw error;
+    }
+}
+
+async function fetchStats() {
+    try {
+        const response = await axios.get(`${API_BASE}/alerts/stats/overview`);
+        return response.data;
+    } catch (error) { 
+        console.error('Failed to fetch stats:', error);
+        return {}; 
+    }
+}
+
+async function fetchAssets() {
+    try {
+        const response = await axios.get(`${API_BASE}/assets/?page=1&size=10`);
+        return response.data.assets || [];
+    } catch (error) { 
+        console.error('Failed to fetch assets:', error);
+        return []; 
+    }
+}
+
+async function fetchAlerts() {
+    try {
+        const response = await axios.get(`${API_BASE}/alerts/?page=1&size=10`);
+        return response.data.alerts || [];
+    } catch (error) { 
+        console.error('Failed to fetch alerts:', error);
+        return []; 
+    }
+}
+
+function logout() {
+    localStorage.removeItem('authToken');
+    delete axios.defaults.headers.common['Authorization'];
+    authToken = null;
+    renderLogin();
+}
+
+async function renderDashboard(editAssetId = null, editAlertId = null, createAlertMode = false) {
+    if (!authToken) { 
+        renderLogin(); 
+        return; 
+    }
+    
+    axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+    
+    // Show loading state
+    document.getElementById('app').innerHTML = '<div class="loading">Loading dashboard...</div>';
+    
+    let user, stats, assets, alerts;
+    try {
+        [user, stats, assets, alerts] = await Promise.all([
+            fetchProfile(),
+            fetchStats(),
+            fetchAssets(),
+            fetchAlerts()
+        ]);
+    } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        showAlert('Failed to load dashboard data');
+        return;
+    }
+    
+    document.getElementById('app').innerHTML = `
+    <div class="dashboard-container">
+      <button class="logout-btn" onclick="logout()">Logout</button>
+      <div class="dashboard-header">
+        <div>
+          <h2>Welcome, ${user.full_name || user.email}</h2>
+          <div style="color:#667eea; font-size:1rem;">${user.company || ''}</div>
+        </div>
+        <div style="text-align:right;">
+          <div><b>Email:</b> ${user.email}</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-title">Critical Alerts</div><div class="stat-value" style="color:#dc3545;">${stats.critical_alerts || 0}</div></div>
+        <div class="stat-card"><div class="stat-title">High Alerts</div><div class="stat-value" style="color:#fd7e14;">${stats.high_alerts || 0}</div></div>
+        <div class="stat-card"><div class="stat-title">Medium Alerts</div><div class="stat-value" style="color:#ffc107;">${stats.medium_alerts || 0}</div></div>
+        <div class="stat-card"><div class="stat-title">Low Alerts</div><div class="stat-value" style="color:#28a745;">${stats.low_alerts || 0}</div></div>
+        <div class="stat-card"><div class="stat-title">Pending Alerts</div><div class="stat-value">${stats.pending_alerts || 0}</div></div>
+      </div>
+      <div class="section">
+        <h3>Add New Asset</h3>
+        <form id="add-asset-form" style="margin-bottom:2rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;align-items:end;">
+          <div><input type="text" id="asset-name" placeholder="Name" required></div>
+          <div>
+            <select id="asset-type" required>
+              <option value="">Type</option>
+              <option value="hardware">Hardware</option>
+              <option value="software">Software</option>
+              <option value="firmware">Firmware</option>
+              <option value="operating_system">Operating System</option>
+            </select>
+          </div>
+          <div><input type="text" id="asset-vendor" placeholder="Vendor"></div>
+          <div><input type="text" id="asset-product" placeholder="Product"></div>
+          <div><input type="text" id="asset-version" placeholder="Version"></div>
+          <div><input type="text" id="asset-description" placeholder="Description"></div>
+          <div><button type="submit">Add Asset</button></div>
+        </form>
+        <h3>Your Assets</h3>
+        <table><thead><tr><th>Name</th><th>Type</th><th>Vendor</th><th>Product</th><th>Version</th><th>Action</th></tr></thead><tbody>
+        ${assets.map(a => editAssetId === a.id ? `
+          <tr>
+            <td colspan="6">
+              <form id="edit-asset-form-${a.id}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.5rem;align-items:end;">
+                <input type="text" id="edit-asset-name" value="${a.name}" required>
+                <select id="edit-asset-type" required>
+                  <option value="hardware" ${a.asset_type==='hardware'?'selected':''}>Hardware</option>
+                  <option value="software" ${a.asset_type==='software'?'selected':''}>Software</option>
+                  <option value="firmware" ${a.asset_type==='firmware'?'selected':''}>Firmware</option>
+                  <option value="operating_system" ${a.asset_type==='operating_system'?'selected':''}>Operating System</option>
+                </select>
+                <input type="text" id="edit-asset-vendor" value="${a.vendor||''}">
+                <input type="text" id="edit-asset-product" value="${a.product||''}">
+                <input type="text" id="edit-asset-version" value="${a.version||''}">
+                <input type="text" id="edit-asset-description" value="${a.description||''}">
+                <button type="submit">Save</button>
+                <button type="button" id="cancel-edit-btn">Cancel</button>
+              </form>
+            </td>
+          </tr>
+        ` : `
+          <tr><td>${a.name}</td><td>${a.asset_type}</td><td>${a.vendor||''}</td><td>${a.product||''}</td><td>${a.version||''}</td><td>
+            <button class='btn btn-small' style='background:#ffc107;color:#333;' onclick='editAsset(${a.id})'>Edit</button>
+            <button class='btn btn-small' style='background:#dc3545' onclick='deleteAsset(${a.id})'>Delete</button>
+          </td></tr>
+        `).join('') || '<tr><td colspan="6">No assets found.</td></tr>'}
+        </tbody></table>
+      </div>
+      <div class="section">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h3>Recent Alerts</h3>
+        </div>
+        <table><thead><tr><th>Title</th><th>Severity</th><th>Asset</th><th>CVE</th><th>Status</th><th>Action</th></tr></thead><tbody>
+        ${alerts.map(al => `
+          <tr><td>${al.title}</td><td>${al.severity}</td><td>${al.asset_name||''}</td><td>${al.cve_id||''}</td><td>${al.status}</td><td>
+            <button class='btn btn-small' style='background:#28a745' onclick='ackAlert(${al.id})'>Acknowledge</button>
+          </td></tr>
+        `).join('') || '<tr><td colspan="6">No alerts found.</td></tr>'}
+        </tbody></table>
+      </div>
+      <div class="section">
+        <h3>User Profile</h3>
+        <div><b>Email:</b> ${user && user.email ? user.email : ''}</div>
+        <div><b>Full Name:</b> ${(user && user.full_name) ? user.full_name : 'N/A'}</div>
+        <div><b>Company:</b> ${(user && user.company) ? user.company : 'N/A'}</div>
+      </div>
+    </div>
+    `;
+    
+    // Add asset form handler
+    document.getElementById('add-asset-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const assetData = {
+            name: document.getElementById('asset-name').value,
+            asset_type: document.getElementById('asset-type').value,
+            vendor: document.getElementById('asset-vendor').value,
+            product: document.getElementById('asset-product').value,
+            version: document.getElementById('asset-version').value,
+            description: document.getElementById('asset-description').value
+        };
+        try {
+            await axios.post(`${API_BASE}/assets/`, assetData);
+            showAlert('Asset added!', 'success');
+            renderDashboard();
+        } catch (error) {
+            showAlert('Failed to add asset: ' + (error.response?.data?.detail || 'Unknown error'));
+        }
+    };
+    
+    // Edit asset form handler
+    if (editAssetId) {
+        document.getElementById(`edit-asset-form-${editAssetId}`).onsubmit = async (e) => {
             e.preventDefault();
-            
-            const assetData = {
-                name: document.getElementById('asset-name').value,
-                asset_type: document.getElementById('asset-type').value,
-                vendor: document.getElementById('asset-vendor').value,
-                product: document.getElementById('asset-product').value,
-                version: document.getElementById('asset-version').value,
-                description: document.getElementById('asset-description').value
-            };
-            
-            try {
-                await axios.post(`${API_BASE}/assets/`, assetData);
-                showAlert('Asset added successfully!');
-                document.getElementById('asset-form').reset();
-                loadAssets();
-                loadStats();
-                
-            } catch (error) {
-                showAlert('Failed to add asset: ' + (error.response?.data?.detail || 'Unknown error'), 'error');
-            }
-        });
-
-        // Load user profile
-        async function loadUserProfile() {
-            try {
-                const response = await axios.get(`${API_BASE}/auth/me`);
-                document.getElementById('user-name').textContent = response.data.full_name || response.data.email;
-            } catch (error) {
-                console.error('Failed to load user profile:', error);
-            }
-        }
-
-        // Load statistics
-        async function loadStats() {
-            try {
-                const response = await axios.get(`${API_BASE}/alerts/stats/overview`);
-                const stats = response.data;
-                
-                document.getElementById('critical-alerts').textContent = stats.critical_alerts;
-                document.getElementById('high-alerts').textContent = stats.high_alerts;
-                document.getElementById('medium-alerts').textContent = stats.medium_alerts;
-                document.getElementById('low-alerts').textContent = stats.low_alerts;
-                document.getElementById('pending-alerts').textContent = stats.pending_alerts;
-                
-                // Load asset count
-                const assetsResponse = await axios.get(`${API_BASE}/assets/`);
-                document.getElementById('total-assets').textContent = assetsResponse.data.total;
-                
-            } catch (error) {
-                console.error('Failed to load statistics:', error);
-            }
-        }
-
-        // Load alerts
-        async function loadAlerts(page = 1, filters = {}) {
-            document.getElementById('alerts-loading').style.display = 'block';
-            currentAlertPage = page;
-
-            let queryParams = `?page=${page}&size=${ALERT_PAGE_SIZE}`;
-            if (filters.severity) queryParams += `&severity=${encodeURIComponent(filters.severity)}`;
-            if (filters.status) queryParams += `&status=${encodeURIComponent(filters.status)}`;
-            if (filters.asset_id) queryParams += `&asset_id=${encodeURIComponent(filters.asset_id)}`;
-            if (filters.cve_id) queryParams += `&cve_id=${encodeURIComponent(filters.cve_id)}`;
-
-            try {
-                const response = await axios.get(`${API_BASE}/alerts/${queryParams}`);
-                const { alerts, total, page: currentPage, size, pages } = response.data;
-                
-                const alertsHtml = alerts.map(alert => `
-                    <div style="border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; border-radius: 5px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h4>${alert.title}</h4>
-                            <span class="severity-badge ${alert.severity}" style="background-color: ${getSeverityColor(alert.severity)}">${alert.severity.toUpperCase()}</span>
-                        </div>
-                        <p><strong>Asset:</strong> ${alert.asset_name}</p>
-                        <p><strong>CVE:</strong> ${alert.cve_id || 'N/A'}</p>
-                        <p><strong>Date:</strong> ${new Date(alert.created_at).toLocaleDateString()}</p>
-                        <p>${alert.description}</p>
-                        ${alert.status === 'pending' ? `<button onclick="acknowledgeAlert(${alert.id})" class="btn-secondary">Acknowledge</button>` : ''}
-                    </div>
-                `).join('');
-                
-                document.getElementById('alerts-list').innerHTML = alertsHtml || '<p>No alerts found matching your criteria.</p>';
-
-                // Update pagination controls
-                document.getElementById('alert-page-info').textContent = `Page ${currentPage} of ${pages}`;
-                document.getElementById('alert-prev-page-btn').disabled = currentPage <= 1;
-                document.getElementById('alert-next-page-btn').disabled = currentPage >= pages;
-                
-            } catch (error) {
-                document.getElementById('alerts-list').innerHTML = '<p>Failed to load alerts.</p>';
-                // Disable pagination buttons on error
-                document.getElementById('alert-prev-page-btn').disabled = true;
-                document.getElementById('alert-next-page-btn').disabled = true;
-            } finally {
-                document.getElementById('alerts-loading').style.display = 'none';
-            }
-        }
-
-        let currentAssetPage = 1;
-        const ASSET_PAGE_SIZE = 5; // Or make this configurable
-
-        // Load assets
-        async function loadAssets(page = 1, filters = {}) {
-            document.getElementById('assets-loading').style.display = 'block';
-            currentAssetPage = page;
-
-            let queryParams = `?page=${page}&size=${ASSET_PAGE_SIZE}`;
-            if (filters.search) queryParams += `&search=${encodeURIComponent(filters.search)}`;
-            if (filters.asset_type) queryParams += `&asset_type=${encodeURIComponent(filters.asset_type)}`;
-            if (filters.vendor) queryParams += `&vendor=${encodeURIComponent(filters.vendor)}`;
-
-            try {
-                const response = await axios.get(`${API_BASE}/assets/${queryParams}`);
-                const { assets, total, page: currentPage, size, pages } = response.data;
-                
-                const assetsHtml = assets.map(asset => `
-                    <div style="border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; border-radius: 5px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h4>${asset.name}</h4>
-                            <div>
-                                <button onclick="openEditAssetModal(${asset.id})" class="btn-secondary" style="margin-right: 5px;">Edit</button>
-                                <button onclick="deleteAsset(${asset.id})" class="btn-danger">Delete</button>
-                            </div>
-                        </div>
-                        <p><strong>Type:</strong> ${asset.asset_type}</p>
-                        <p><strong>Vendor:</strong> ${asset.vendor || 'N/A'}</p>
-                        <p><strong>Product:</strong> ${asset.product || 'N/A'}</p>
-                        <p><strong>Version:</strong> ${asset.version || 'N/A'}</p>
-                        ${asset.description ? `<p><strong>Description:</strong> ${asset.description}</p>` : ''}
-                    </div>
-                `).join('');
-                
-                document.getElementById('assets-list').innerHTML = assetsHtml || '<p>No assets found matching your criteria. Add your first asset or adjust filters!</p>';
-                
-                // Update pagination controls
-                document.getElementById('asset-page-info').textContent = `Page ${currentPage} of ${pages}`;
-                document.getElementById('asset-prev-page-btn').disabled = currentPage <= 1;
-                document.getElementById('asset-next-page-btn').disabled = currentPage >= pages;
-
-            } catch (error) {
-                document.getElementById('assets-list').innerHTML = '<p>Failed to load assets.</p>';
-                 // Disable pagination buttons on error
-                document.getElementById('asset-prev-page-btn').disabled = true;
-                document.getElementById('asset-next-page-btn').disabled = true;
-            } finally {
-                document.getElementById('assets-loading').style.display = 'none';
-            }
-        }
-
-        // Event listener for alert filters
-        document.getElementById('apply-alert-filters-btn').addEventListener('click', () => {
-            const filters = {
-                severity: document.getElementById('alert-severity-filter').value,
-                status: document.getElementById('alert-status-filter').value,
-                asset_id: document.getElementById('alert-asset-id-filter').value,
-                cve_id: document.getElementById('alert-cve-id-filter').value
-            };
-            loadAlerts(1, filters); // Load first page with new filters
-        });
-
-        // Event listeners for alert pagination
-        document.getElementById('alert-prev-page-btn').addEventListener('click', () => {
-            if (currentAlertPage > 1) {
-                const filters = {
-                    severity: document.getElementById('alert-severity-filter').value,
-                    status: document.getElementById('alert-status-filter').value,
-                    asset_id: document.getElementById('alert-asset-id-filter').value,
-                    cve_id: document.getElementById('alert-cve-id-filter').value
-                };
-                loadAlerts(currentAlertPage - 1, filters);
-            }
-        });
-
-        document.getElementById('alert-next-page-btn').addEventListener('click', () => {
-            const filters = {
-                severity: document.getElementById('alert-severity-filter').value,
-                status: document.getElementById('alert-status-filter').value,
-                asset_id: document.getElementById('alert-asset-id-filter').value,
-                cve_id: document.getElementById('alert-cve-id-filter').value
-            };
-            loadAlerts(currentAlertPage + 1, filters);
-        });
-
-        // Open Edit Asset Modal
-        async function openEditAssetModal(assetId) {
-            try {
-                const response = await axios.get(`${API_BASE}/assets/${assetId}`);
-                const asset = response.data;
-                
-                document.getElementById('edit-asset-id').value = asset.id;
-                document.getElementById('edit-asset-name').value = asset.name;
-                document.getElementById('edit-asset-type').value = asset.asset_type;
-                document.getElementById('edit-asset-vendor').value = asset.vendor || '';
-                document.getElementById('edit-asset-product').value = asset.product || '';
-                document.getElementById('edit-asset-version').value = asset.version || '';
-                document.getElementById('edit-asset-description').value = asset.description || '';
-                
-                document.getElementById('edit-asset-modal').style.display = 'flex';
-            } catch (error) {
-                showAlert('Failed to load asset details for editing.', 'error');
-            }
-        }
-
-        // Close Edit Asset Modal
-        function closeEditAssetModal() {
-            document.getElementById('edit-asset-modal').style.display = 'none';
-            document.getElementById('edit-asset-form').reset();
-        }
-
-        // Handle Update Asset Form Submission
-        document.getElementById('edit-asset-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const assetId = document.getElementById('edit-asset-id').value;
-            const assetData = {
+            const updatedAsset = {
                 name: document.getElementById('edit-asset-name').value,
                 asset_type: document.getElementById('edit-asset-type').value,
                 vendor: document.getElementById('edit-asset-vendor').value,
@@ -1061,96 +460,52 @@
                 version: document.getElementById('edit-asset-version').value,
                 description: document.getElementById('edit-asset-description').value
             };
-
             try {
-                await axios.put(`${API_BASE}/assets/${assetId}`, assetData);
-                showAlert('Asset updated successfully!');
-                closeEditAssetModal();
-                loadAssets(); // Refresh the list of assets
-                loadStats(); // Potentially update total asset count
+                await axios.put(`${API_BASE}/assets/${editAssetId}`, updatedAsset);
+                showAlert('Asset updated!', 'success');
+                renderDashboard();
             } catch (error) {
-                showAlert('Failed to update asset: ' + (error.response?.data?.detail || 'Unknown error'), 'error');
+                showAlert('Failed to update asset: ' + (error.response?.data?.detail || 'Unknown error'));
             }
-        });
+        };
+        document.getElementById('cancel-edit-btn').onclick = () => renderDashboard();
+    }
+}
 
-        // Acknowledge alert
-        async function acknowledgeAlert(alertId) {
-            try {
-                await axios.post(`${API_BASE}/alerts/${alertId}/acknowledge`);
-                showAlert('Alert acknowledged!');
-                loadAlerts();
-                loadStats();
-            } catch (error) {
-                showAlert('Failed to acknowledge alert', 'error');
-            }
-        }
+// Edit asset function
+function editAsset(assetId) {
+    renderDashboard(assetId);
+}
 
-        // Delete asset
-        async function deleteAsset(assetId) {
-            if (confirm('Are you sure you want to delete this asset?')) {
-                try {
-                    await axios.delete(`${API_BASE}/assets/${assetId}`);
-                    showAlert('Asset deleted successfully!');
-                    loadAssets();
-                    loadStats();
-                } catch (error) {
-                    showAlert('Failed to delete asset', 'error');
-                }
-            }
-        }
+// Delete asset function
+async function deleteAsset(assetId) {
+    if (!confirm('Are you sure you want to delete this asset?')) return;
+    try {
+        await axios.delete(`${API_BASE}/assets/${assetId}`);
+        showAlert('Asset deleted!', 'success');
+        renderDashboard();
+    } catch (error) {
+        showAlert('Failed to delete asset: ' + (error.response?.data?.detail || 'Unknown error'));
+    }
+}
 
-        // Get severity color
-        function getSeverityColor(severity) {
-            const colors = {
-                'critical': '#dc3545',
-                'high': '#fd7e14',
-                'medium': '#ffc107',
-                'low': '#28a745'
-            };
-            return colors[severity] || '#6c757d';
-        }
+// Alert actions
+async function ackAlert(alertId) {
+    try {
+        await axios.post(`${API_BASE}/alerts/${alertId}/acknowledge`);
+        showAlert('Alert acknowledged!', 'success');
+        renderDashboard();
+    } catch (error) {
+        showAlert('Failed to acknowledge alert: ' + (error.response?.data?.detail || 'Unknown error'));
+    }
+}
 
-        // Show dashboard
-        function showDashboard() {
-            document.getElementById('auth-section').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            loadStats();
-            loadAlerts();
-        }
-
-        // Logout
-        function logout() {
-            localStorage.removeItem('authToken');
-            delete axios.defaults.headers.common['Authorization'];
-            document.getElementById('auth-section').style.display = 'block';
-            document.getElementById('dashboard').style.display = 'none';
-            showAlert('Logged out successfully!');
-        }
-
-        // GitHub Login
-        function githubLogin() {
-            // Get the GitHub OAuth URL from the backend
-            axios.get(`${API_BASE}/auth/github/login`)
-                .then(response => {
-                    const authUrl = response.data.auth_url;
-                    // Redirect to GitHub OAuth
-                    window.location.href = authUrl;
-                })
-                .catch(error => {
-                    showAlert('GitHub login failed: ' + (error.response?.data?.detail || 'Unknown error'), 'error');
-                });
-        }
-
-        // Initialize app
-        if (authToken) {
-            loadUserProfile().then(() => {
-                showDashboard();
-            }).catch(() => {
-                // Token invalid, remove it
-                localStorage.removeItem('authToken');
-                delete axios.defaults.headers.common['Authorization'];
-            });
-        }
-    </script>
+// Initial render
+if (authToken) {
+    renderDashboard();
+} else {
+    renderLogin();
+}
+</script>
 </body>
 </html>

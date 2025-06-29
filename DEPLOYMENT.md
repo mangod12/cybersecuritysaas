@@ -1,295 +1,297 @@
-# 🚀 CyberSec Alert SaaS - Deployment Guide
+# CyberSec Alert SaaS - Deployment Guide
 
-This guide covers all deployment options for the CyberSec Alert SaaS application.
+This guide covers multiple deployment options for the CyberSec Alert SaaS application.
+
+## 🚀 Quick Start
+
+Use the deployment script for easy deployment:
+
+```bash
+# Docker deployment
+python scripts/deploy.py docker
+
+# Heroku deployment
+python scripts/deploy.py heroku
+
+# Local production deployment
+python scripts/deploy.py local
+```
 
 ## 📋 Prerequisites
 
-- Python 3.11+ (3.12 recommended)
+### For All Deployments
+- Python 3.12+
 - Git
-- Docker & Docker Compose (for containerized deployment)
-- GitHub OAuth App configured
 
-## 🎯 Deployment Options
+### For Docker Deployment
+- Docker
+- Docker Compose
 
-### Option 1: Local Development Deployment
+### For Heroku Deployment
+- Heroku CLI
+- Heroku account
 
-**Quick Start:**
+## 🐳 Docker Deployment
+
+### Option 1: Using Deployment Script
 ```bash
-# 1. Clone and setup
-git clone <your-repo>
-cd cybersecuritysaas-main
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Configure environment
-cp .env.example .env
-# Edit .env with your GitHub OAuth credentials
-
-# 4. Deploy
-python deploy.py
+python scripts/deploy.py docker
 ```
 
-**Manual Steps:**
+### Option 2: Manual Docker Deployment
 ```bash
-# Initialize database
-python init_db.py
-
-# Start server
-uvicorn backend.main:app --host 0.0.0.0 --port 8001 --reload
-```
-
-**Access:**
-- Application: http://localhost:8001
-- API Docs: http://localhost:8001/docs
-- Health Check: http://localhost:8001/health
-
-### Option 2: Docker Deployment
-
-**Single Container:**
-```bash
-# Build and run
-docker build -t cybersec-alert-saas .
-docker run -p 8001:8001 --env-file .env cybersec-alert-saas
-```
-
-**Multi-Container (Recommended):**
-```bash
-# Start all services
+# Build and start services
+docker-compose build
 docker-compose up -d
+
+# Check status
+docker-compose ps
 
 # View logs
 docker-compose logs -f app
-
-# Stop services
-docker-compose down
 ```
 
-### Option 3: Production Deployment
+### Docker Services
+- **App**: FastAPI application (port 8001)
+- **Database**: PostgreSQL 15 (port 5432)
+- **Nginx**: Reverse proxy (port 80/443)
 
-#### A. Cloud Platform Deployment
+### Environment Variables
+Create a `.env` file for custom configuration:
+```env
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=postgresql://postgres:password@db:5432/cybersec_alerts
+```
 
-**Heroku:**
+## ☁️ Heroku Deployment
+
+### Option 1: Using Deployment Script
 ```bash
-# Create Procfile
-echo "web: uvicorn backend.main:app --host 0.0.0.0 --port \$PORT" > Procfile
+python scripts/deploy.py heroku
+```
+
+### Option 2: Manual Heroku Deployment
+```bash
+# Login to Heroku
+heroku login
+
+# Create app
+heroku create your-app-name
+
+# Set environment variables
+heroku config:set SECRET_KEY=your-secret-key-here
+heroku config:set DATABASE_URL=sqlite:///cybersec_alerts.db
 
 # Deploy
-heroku create your-app-name
-heroku config:set GITHUB_CLIENT_ID=your_client_id
-heroku config:set GITHUB_CLIENT_SECRET=your_client_secret
-heroku config:set GITHUB_REDIRECT_URI=https://your-app-name.herokuapp.com/api/v1/auth/github/callback
+git add .
+git commit -m "Deploy to Heroku"
 git push heroku main
+
+# Open app
+heroku open
 ```
 
-**Railway:**
+### Heroku Add-ons (Optional)
 ```bash
-# Connect repository to Railway
-# Set environment variables in Railway dashboard
-# Deploy automatically on push
+# Add PostgreSQL database
+heroku addons:create heroku-postgresql:mini
+
+# Add Redis for caching
+heroku addons:create heroku-redis:mini
 ```
 
-**Render:**
+## 🏠 Local Production Deployment
+
+### Option 1: Using Deployment Script
 ```bash
-# Connect repository to Render
-# Set environment variables
-# Configure build command: pip install -r requirements.txt
-# Configure start command: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+python scripts/deploy.py local
 ```
 
-#### B. VPS Deployment
-
-**Ubuntu/Debian:**
+### Option 2: Manual Local Deployment
 ```bash
-# Update system
-sudo apt update && sudo apt upgrade -y
-
 # Install dependencies
-sudo apt install python3 python3-pip python3-venv nginx postgresql
-
-# Clone application
-git clone <your-repo>
-cd cybersecuritysaas-main
-
-# Setup virtual environment
-python3 -m venv venv
-source venv/bin/activate
 pip install -r requirements.txt
 
-# Setup database
-sudo -u postgres createdb cybersec_alerts
-sudo -u postgres createuser cybersec_user
+# Set environment variables
+export SECRET_KEY=your-secret-key-here
+export DATABASE_URL=sqlite:///cybersec_alerts.db
 
-# Configure environment
-cp .env.example .env
-# Edit .env with production values
+# Initialize database
+python scripts/setup_database.py
 
-# Setup systemd service
-sudo cp deployment/cybersec-alert.service /etc/systemd/system/
-sudo systemctl enable cybersec-alert
-sudo systemctl start cybersec-alert
-
-# Setup nginx
-sudo cp nginx.conf /etc/nginx/sites-available/cybersec-alert
-sudo ln -s /etc/nginx/sites-available/cybersec-alert /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
+# Start production server
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 ## 🔧 Environment Configuration
 
 ### Required Environment Variables
-
 ```env
-# GitHub OAuth
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-GITHUB_REDIRECT_URI=https://yourdomain.com/api/v1/auth/github/callback
-
 # Security
 SECRET_KEY=your-secret-key-here
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 # Database
-DATABASE_URL=postgresql://user:password@localhost/cybersec_alerts
+DATABASE_URL=sqlite:///cybersec_alerts.db
 
-# Email (Optional)
-MAILGUN_API_KEY=your_mailgun_key
-MAILGUN_DOMAIN=your_domain.com
+# Email (optional)
+MAILGUN_API_KEY=your-mailgun-api-key
+MAILGUN_DOMAIN=your-mailgun-domain
 FROM_EMAIL=noreply@yourdomain.com
 
-# NVD API (Optional)
-NVD_API_KEY=your_nvd_api_key
+# NVD API (optional)
+NVD_API_KEY=your-nvd-api-key
 ```
 
-### Production Security Checklist
+### Optional Environment Variables
+```env
+# Application
+APP_NAME=CyberSec Alert SaaS
+APP_VERSION=1.0.0
+DEBUG=false
 
-- [ ] Use HTTPS in production
-- [ ] Set strong SECRET_KEY
-- [ ] Configure CORS origins properly
-- [ ] Use PostgreSQL instead of SQLite
-- [ ] Set up proper logging
-- [ ] Configure rate limiting
-- [ ] Set up monitoring and alerts
-- [ ] Regular backups
-- [ ] SSL certificates
-- [ ] Firewall configuration
+# CORS
+CORS_ORIGINS=["http://localhost:3000", "https://yourdomain.com"]
 
-## 📊 Monitoring & Maintenance
+# Scraper settings
+SCRAPER_INTERVAL_HOURS=6
+```
+
+## 📊 Database Setup
+
+### SQLite (Default)
+- Automatically created on first run
+- Good for development and small deployments
+
+### PostgreSQL (Production)
+```bash
+# Install PostgreSQL
+sudo apt-get install postgresql postgresql-contrib
+
+# Create database
+sudo -u postgres createdb cybersec_alerts
+sudo -u postgres createuser cybersec_user
+
+# Set password
+sudo -u postgres psql
+ALTER USER cybersec_user PASSWORD 'your-password';
+GRANT ALL PRIVILEGES ON DATABASE cybersec_alerts TO cybersec_user;
+\q
+
+# Update DATABASE_URL
+export DATABASE_URL=postgresql://cybersec_user:your-password@localhost:5432/cybersec_alerts
+```
+
+## 🔒 Security Configuration
+
+### Generate Secret Key
+```python
+import secrets
+print(secrets.token_hex(32))
+```
+
+### SSL/TLS Setup (Production)
+```bash
+# Generate SSL certificate
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+
+# Update nginx.conf with SSL configuration
+# Uncomment HTTPS server block in nginx.conf
+```
+
+## 📈 Monitoring and Logging
 
 ### Health Checks
-```bash
-# Check application health
-curl http://localhost:8001/health
-
-# Check database connection
-python -c "from backend.database.db import engine; print('DB OK')"
-
-# Check GitHub OAuth
-curl http://localhost:8001/api/v1/auth/github/login
-```
+- **Application**: `GET /health`
+- **Database**: Check connection status
+- **Scheduler**: Verify job execution
 
 ### Logs
 ```bash
-# Application logs
-tail -f logs/app.log
-
 # Docker logs
 docker-compose logs -f app
 
-# System logs
-sudo journalctl -u cybersec-alert -f
+# Heroku logs
+heroku logs --tail
+
+# Local logs
+tail -f logs/app.log
 ```
 
-### Backup
+## 🔄 Updates and Maintenance
+
+### Docker Updates
 ```bash
-# Database backup
-pg_dump cybersec_alerts > backup_$(date +%Y%m%d).sql
+# Pull latest changes
+git pull origin main
 
-# Application backup
-tar -czf app_backup_$(date +%Y%m%d).tar.gz . --exclude=venv --exclude=__pycache__
+# Rebuild and restart
+docker-compose down
+docker-compose build
+docker-compose up -d
 ```
 
-## 🔄 CI/CD Pipeline
+### Heroku Updates
+```bash
+# Deploy updates
+git add .
+git commit -m "Update application"
+git push heroku main
+```
 
-### GitHub Actions Example
+### Database Migrations
+```bash
+# Run migrations (if using Alembic)
+alembic upgrade head
 
-```yaml
-name: Deploy to Production
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          script: |
-            cd /path/to/app
-            git pull origin main
-            source venv/bin/activate
-            pip install -r requirements.txt
-            python init_db.py
-            sudo systemctl restart cybersec-alert
+# Or recreate database
+python scripts/setup_database.py
 ```
 
 ## 🚨 Troubleshooting
 
 ### Common Issues
 
-**1. "GitHub OAuth not configured"**
-- Check .env file exists and has correct values
-- Restart application after changing .env
-- Verify GitHub OAuth App settings
-
-**2. Database connection errors**
-- Check DATABASE_URL format
-- Ensure database server is running
-- Verify user permissions
-
-**3. Port already in use**
-- Change port in uvicorn command
-- Check for other running services
-- Use `netstat -tulpn | grep :8001`
-
-**4. Permission denied**
-- Check file permissions
-- Run as appropriate user
-- Verify Docker user permissions
-
-### Performance Optimization
-
-**For High Traffic:**
-- Use Gunicorn with multiple workers
-- Implement Redis for caching
-- Use CDN for static files
-- Database connection pooling
-- Load balancing
-
-**Gunicorn Configuration:**
+#### Port Already in Use
 ```bash
-gunicorn backend.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8001
+# Find process using port
+lsof -i :8000
+# Kill process
+kill -9 <PID>
+```
+
+#### Database Connection Issues
+```bash
+# Check database status
+docker-compose ps db
+# Restart database
+docker-compose restart db
+```
+
+#### Permission Issues
+```bash
+# Fix file permissions
+chmod +x scripts/deploy.py
+chmod +x scripts/start_server.py
+```
+
+### Debug Mode
+```bash
+# Enable debug logging
+export DEBUG=true
+python scripts/start_server.py
 ```
 
 ## 📞 Support
 
 For deployment issues:
-1. Check logs for error messages
-2. Verify environment configuration
-3. Test individual components
-4. Review security checklist
-5. Contact support with error details
+1. Check the logs for error messages
+2. Verify environment variables are set correctly
+3. Ensure all prerequisites are installed
+4. Check network connectivity and firewall settings
 
----
+## 🔗 Useful Links
 
-**🎉 Your CyberSec Alert SaaS is now deployed and ready to monitor vulnerabilities!** 
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [Docker Documentation](https://docs.docker.com/)
+- [Heroku Documentation](https://devcenter.heroku.com/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/) 
