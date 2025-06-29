@@ -28,6 +28,26 @@
             min-width: 340px;
             max-width: 95vw;
         }
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .logo-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .logo-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 400;
+        }
         .input-group {
             margin-bottom: 1.2rem;
         }
@@ -61,6 +81,39 @@
         }
         button:hover, .btn:hover {
             background: linear-gradient(90deg, #5a6fd8 0%, #6d3fa2 100%);
+        }
+        .github-btn {
+            background: #24292e;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+        .github-btn:hover {
+            background: #1a1e22;
+        }
+        .divider {
+            text-align: center;
+            margin: 1rem 0;
+            position: relative;
+        }
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e0e7ff;
+        }
+        .divider span {
+            background: white;
+            padding: 0 1rem;
+            color: #666;
+            font-size: 0.9rem;
         }
         .logout-btn {
             position: absolute;
@@ -188,7 +241,13 @@ function renderLogin(showRegister = false) {
     document.getElementById('app').innerHTML = `
     <div class="centered">
       <div class="card">
-        <h2 style="text-align:center; margin-bottom:1.5rem;">CyberSec Alert SaaS</h2>
+        <div class="logo">
+          <div class="logo-icon">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <div class="logo-text">CyberSec Alert</div>
+          <div class="logo-subtitle">Enterprise Security Monitoring</div>
+        </div>
         <div id="login-register-toggle" style="text-align:center; margin-bottom:1rem;">
           <button id="show-login-btn" style="width:auto;${showRegister ? '' : ' background:#667eea;'}">Login</button>
           <button id="show-register-btn" style="width:auto;${showRegister ? ' background:#667eea;' : ''}">Register</button>
@@ -200,7 +259,14 @@ function renderLogin(showRegister = false) {
           <div class="input-group">
             <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
           </div>
-          <button type="submit">Login</button>
+          <button type="submit">Sign In</button>
+          <div class="divider">
+            <span>or</span>
+          </div>
+          <button type="button" class="github-btn" onclick="githubLogin()">
+            <i class="fab fa-github"></i>
+            Continue with GitHub
+          </button>
         </form>
         <form id="register-form" style="display:${showRegister ? 'block' : 'none'};">
           <div class="input-group">
@@ -215,7 +281,14 @@ function renderLogin(showRegister = false) {
           <div class="input-group">
             <input type="text" id="register-company" placeholder="Company" autocomplete="organization">
           </div>
-          <button type="submit">Register</button>
+          <button type="submit">Create Account</button>
+          <div class="divider">
+            <span>or</span>
+          </div>
+          <button type="button" class="github-btn" onclick="githubLogin()">
+            <i class="fab fa-github"></i>
+            Sign up with GitHub
+          </button>
         </form>
       </div>
     </div>
@@ -265,6 +338,44 @@ function renderLogin(showRegister = false) {
             showAlert('Registration failed: ' + (error.response?.data?.detail || 'Unknown error'));
         }
     };
+}
+
+async function githubLogin() {
+    try {
+        const response = await axios.get(`${API_BASE}/auth/github/login`);
+        window.location.href = response.data.auth_url;
+    } catch (error) {
+        showAlert('GitHub login failed: ' + (error.response?.data?.detail || 'Unknown error'));
+    }
+}
+
+// Check for GitHub OAuth callback
+function checkGitHubCallback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    
+    if (code) {
+        handleGitHubCallback(code, state);
+    }
+}
+
+async function handleGitHubCallback(code, state) {
+    try {
+        const response = await axios.get(`${API_BASE}/auth/github/callback?code=${code}&state=${state || ''}`);
+        authToken = response.data.access_token;
+        localStorage.setItem('authToken', authToken);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        showAlert('GitHub login successful!', 'success');
+        renderDashboard();
+    } catch (error) {
+        showAlert('GitHub authentication failed: ' + (error.response?.data?.detail || 'Unknown error'));
+        renderLogin();
+    }
 }
 
 async function fetchProfile() {
@@ -504,7 +615,11 @@ async function ackAlert(alertId) {
 if (authToken) {
     renderDashboard();
 } else {
-    renderLogin();
+    // Check for GitHub OAuth callback first
+    checkGitHubCallback();
+    if (!authToken) {
+        renderLogin();
+    }
 }
 </script>
 </body>

@@ -143,8 +143,11 @@ async def github_login():
     try:
         auth_url = github_auth_service.get_authorization_url()
         return {"auth_url": auth_url}
-    except HTTPException as e:
-        raise e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -153,87 +156,19 @@ async def github_login():
 
 
 @router.get("/github/callback")
-async def github_callback(
-    code: str,
-    state: Optional[str] = None,
-    db: AsyncSession = Depends(get_async_db)
-):
-    """Handle GitHub OAuth callback and create/login user."""
+async def github_callback(code: str, state: Optional[str] = None):
+    """Handle GitHub OAuth callback and authenticate user."""
     try:
-        # Exchange code for access token
-        access_token = await github_auth_service.exchange_code_for_token(code)
+        # Complete GitHub OAuth flow
+        result = await github_auth_service.authenticate_user(code)
         
-        # Get user info from GitHub
-        github_user_info = await github_auth_service.get_user_info(access_token)
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="GitHub authentication failed"
+            )
         
-        # Check if user exists by GitHub ID
-        result = await db.execute(
-            select(User).where(User.github_id == str(github_user_info["id"]))
-        )
-        user = result.scalar_one_or_none()
-        
-        if user:
-            # User exists, update info and return token
-            user.github_username = github_user_info["login"]
-            user.avatar_url = github_user_info.get("avatar_url")
-            user.is_verified = True
-            await db.commit()
-        else:
-            # Check if user exists by email
-            if github_user_info["email"]:
-                result = await db.execute(
-                    select(User).where(User.email == github_user_info["email"])
-                )
-                existing_user = result.scalar_one_or_none()
-                
-                if existing_user:
-                    # Link existing email account to GitHub
-                    existing_user.github_id = str(github_user_info["id"])
-                    existing_user.github_username = github_user_info["login"]
-                    existing_user.avatar_url = github_user_info.get("avatar_url")
-                    existing_user.auth_provider = "github"
-                    existing_user.is_verified = True
-                    await db.commit()
-                    user = existing_user
-                else:
-                    # Create new user
-                    user = User(
-                        email=github_user_info["email"],
-                        github_id=str(github_user_info["id"]),
-                        github_username=github_user_info["login"],
-                        full_name=github_user_info.get("name"),
-                        company=github_user_info.get("company"),
-                        avatar_url=github_user_info.get("avatar_url"),
-                        auth_provider="github",
-                        is_active=True,
-                        is_verified=True
-                    )
-                    db.add(user)
-                    await db.commit()
-                    await db.refresh(user)
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="GitHub account has no verified email address"
-                )
-        
-        # Create JWT token
-        access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-        jwt_token = create_access_token(
-            data={"sub": user.email}, expires_delta=access_token_expires
-        )
-        
-        return {
-            "access_token": jwt_token,
-            "token_type": "bearer",
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "full_name": user.full_name,
-                "github_username": user.github_username,
-                "avatar_url": user.avatar_url
-            }
-        }
+        return result
         
     except HTTPException as e:
         raise e
