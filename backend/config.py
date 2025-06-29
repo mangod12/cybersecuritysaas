@@ -78,7 +78,7 @@ class Settings(BaseSettings):
     
     # List of allowed origins for CORS (Cross-Origin Resource Sharing).
     # Important for frontend applications running on different domains/ports.
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:8000", "http://localhost:8001"]
+    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:8000", "http://localhost:8000"]
     
     # Scheduler Configuration
     # Interval in hours for the vulnerability scraper to run.
@@ -98,8 +98,8 @@ class Settings(BaseSettings):
     # GitHub OAuth App Client Secret
     github_client_secret: Optional[str] = None
     
-    # GitHub OAuth redirect URI
-    github_redirect_uri: str = "http://localhost:8001/api/v1/auth/github/callback"
+    # GitHub OAuth redirect URI (port 8000 for local)
+    github_redirect_uri: str = "http://localhost:8000/api/v1/auth/github/callback"
 
     # Pydantic Model Configuration
     # Tells Pydantic how to load and manage settings.

@@ -12,7 +12,7 @@ import logging
 import os
 
 from backend.config import settings
-from backend.routers import auth, assets, alerts
+from backend.routers import auth, alerts, assets
 from backend.scheduler.cron import scheduler
 
 
@@ -43,18 +43,33 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="CVE and OEM vulnerability notification SaaS for SMBs",
+    description="A SaaS for monitoring cybersecurity alerts.",
     lifespan=lifespan
 )
 
-# Configure CORS
+# CORS configuration
+origins = [
+    "http://localhost",
+    "http://localhost:8000",
+    "http://127.0.0.1",
+    "http://127.0.0.1:8000",
+    "null" # Allow file:// origin
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def on_startup():
+    """Application startup events."""
+    # No database init_db call here; handled by migration or setup script
+    logger.info("Startup complete.")
 
 
 # Exception handlers
@@ -77,15 +92,15 @@ async def general_exception_handler(request, exc):
     )
 
 
-# Include routers
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
-app.include_router(assets.router, prefix="/api/v1/assets", tags=["Assets"])
-app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["Alerts"])
+# API routers
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["alerts"])
+app.include_router(assets.router, prefix="/api/v1/assets", tags=["assets"])
 
 
 # Health check endpoint
-@app.get("/health")
-async def health_check():
+@app.get("/health", tags=["health"])
+def health_check():
     """Health check endpoint."""
     return {
         "status": "healthy",

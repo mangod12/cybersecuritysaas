@@ -79,12 +79,12 @@ class GitHubAuthService:
                 },
                 headers={"Accept": "application/json"}
             )
-            
             if response.status_code == 200:
                 data = response.json()
                 return data.get("access_token")
             else:
                 logger.error(f"Failed to exchange code for token: {response.text}")
+                print(f"Failed to exchange code for token: {response.text}")
                 return None
     
     async def get_user_info(self, access_token: str) -> Optional[Dict[str, Any]]:
@@ -102,15 +102,13 @@ class GitHubAuthService:
                 "Authorization": f"token {access_token}",
                 "Accept": "application/vnd.github.v3+json"
             }
-            
             # Get user profile
             response = await client.get("https://api.github.com/user", headers=headers)
             if response.status_code != 200:
                 logger.error(f"Failed to get user info: {response.text}")
+                print(f"Failed to get user info: {response.text}")
                 return None
-            
             user_data = response.json()
-            
             # Get user emails
             email_response = await client.get("https://api.github.com/user/emails", headers=headers)
             if email_response.status_code == 200:
@@ -118,7 +116,6 @@ class GitHubAuthService:
                 primary_email = next((email["email"] for email in emails if email["primary"]), None)
                 if primary_email:
                     user_data["email"] = primary_email
-            
             return user_data
     
     async def authenticate_user(self, code: str) -> Optional[Dict[str, Any]]:
@@ -135,17 +132,18 @@ class GitHubAuthService:
             # Exchange code for token
             access_token = await self.exchange_code_for_token(code)
             if not access_token:
+                print("No access token received from GitHub.")
                 return None
-            
             # Get user information
             user_info = await self.get_user_info(access_token)
             if not user_info:
+                print("No user info received from GitHub.")
                 return None
-            
             # Get or create user
             async with AsyncSessionLocal() as session:
                 user = await self._get_or_create_user(session, user_info)
                 if not user:
+                    print("Failed to get or create user from GitHub info.")
                     return None
                 
                 # Generate JWT token
@@ -169,6 +167,7 @@ class GitHubAuthService:
                 
         except Exception as e:
             logger.error(f"GitHub authentication failed: {e}")
+            print(f"GitHub authentication failed: {e}")
             return None
     
     async def _get_or_create_user(self, session: AsyncSession, user_info: Dict[str, Any]) -> Optional[User]:
@@ -185,6 +184,7 @@ class GitHubAuthService:
         email = user_info.get("email")
         if not email:
             logger.error("No email found in GitHub user info")
+            print("No email found in GitHub user info")
             return None
         
         # Check if user exists
@@ -212,8 +212,9 @@ class GitHubAuthService:
             return user
         except Exception as e:
             logger.error(f"Failed to create user: {e}")
+            print(f"Failed to create user: {e}")
             await session.rollback()
             return None
 
 # Global instance
-github_auth_service = GitHubAuthService() 
+github_auth_service = GitHubAuthService()

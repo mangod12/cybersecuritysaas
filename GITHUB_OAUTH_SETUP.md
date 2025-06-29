@@ -19,9 +19,9 @@ This guide will help you set up GitHub OAuth authentication for the CyberSec Ale
 2. **Fill in the OAuth App Details**
    ```
    Application name: CyberSec Alert SaaS
-   Homepage URL: http://localhost:8001 (for local development)
+   Homepage URL: http://localhost:8000 (for local development)
    Application description: Cybersecurity monitoring and alert system
-   Authorization callback URL: http://localhost:8001/api/v1/auth/github/callback
+   Authorization callback URL: http://localhost:8000/api/v1/auth/github/callback
    ```
 
 3. **Register the Application**
@@ -35,7 +35,7 @@ This guide will help you set up GitHub OAuth authentication for the CyberSec Ale
    # GitHub OAuth Configuration
    GITHUB_CLIENT_ID=your_github_client_id_here
    GITHUB_CLIENT_SECRET=your_github_client_secret_here
-   GITHUB_REDIRECT_URI=http://localhost:8001/api/v1/auth/github/callback
+   GITHUB_REDIRECT_URI=http://localhost:8000/api/v1/auth/github/callback
    
    # Other required settings
    SECRET_KEY=your-secret-key-here
@@ -64,11 +64,12 @@ If deploying to production, update your GitHub OAuth App settings:
 
 1. **Start the application**
    ```bash
+   # For local development (port 8000)
    python scripts/start_server.py
    ```
 
 2. **Navigate to the login page**
-   - Go to `http://localhost:8001`
+   - Go to `http://localhost:8000`
    - You should see the login form with a "Continue with GitHub" button
 
 3. **Test GitHub login**
@@ -87,6 +88,7 @@ If deploying to production, update your GitHub OAuth App settings:
 2. **"Redirect URI mismatch" error**
    - Ensure the callback URL in your GitHub OAuth App matches exactly
    - Check for trailing slashes or protocol mismatches
+   - Verify you're using the correct port (8000 for local)
 
 3. **"Invalid client" error**
    - Verify your Client ID and Client Secret are correct
@@ -151,4 +153,4 @@ After successful setup:
 1. **Customize the UI** - Modify the login page styling
 2. **Add User Management** - Implement user profile management
 3. **Set up Email Notifications** - Configure email alerts for new users
-4. **Monitor Usage** - Track OAuth usage and user registrations 
+4. **Monitor Usage** - Track OAuth usage and user registrations

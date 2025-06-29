@@ -1,0 +1,6 @@
+Removed Docker-related files:
+- docker-compose.yml
+- Dockerfile
+- nginx.conf
+
+To restore, recover these files from version control or backup.

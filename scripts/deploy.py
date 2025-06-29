@@ -131,7 +131,10 @@ def deploy_local_production():
     run_command("uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4")
     
     print("Local production deployment completed!")
-    print("Application is running at: http://localhost:8000")
+    print("Application is running at:")
+    print("   • Main app: http://localhost:8000")
+    print("   • API docs: http://localhost:8000/docs")
+    print("   • Health check: http://localhost:8000/health")
 
 def main():
     parser = argparse.ArgumentParser(description="Deploy CyberSec Alert SaaS")

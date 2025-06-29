@@ -7,12 +7,6 @@ This guide covers multiple deployment options for the CyberSec Alert SaaS applic
 Use the deployment script for easy deployment:
 
 ```bash
-# Docker deployment
-python scripts/deploy.py docker
-
-# Heroku deployment
-python scripts/deploy.py heroku
-
 # Local production deployment
 python scripts/deploy.py local
 ```
@@ -22,83 +16,6 @@ python scripts/deploy.py local
 ### For All Deployments
 - Python 3.12+
 - Git
-
-### For Docker Deployment
-- Docker
-- Docker Compose
-
-### For Heroku Deployment
-- Heroku CLI
-- Heroku account
-
-## 🐳 Docker Deployment
-
-### Option 1: Using Deployment Script
-```bash
-python scripts/deploy.py docker
-```
-
-### Option 2: Manual Docker Deployment
-```bash
-# Build and start services
-docker-compose build
-docker-compose up -d
-
-# Check status
-docker-compose ps
-
-# View logs
-docker-compose logs -f app
-```
-
-### Docker Services
-- **App**: FastAPI application (port 8001)
-- **Database**: PostgreSQL 15 (port 5432)
-- **Nginx**: Reverse proxy (port 80/443)
-
-### Environment Variables
-Create a `.env` file for custom configuration:
-```env
-SECRET_KEY=your-secret-key-here
-DATABASE_URL=postgresql://postgres:password@db:5432/cybersec_alerts
-```
-
-## ☁️ Heroku Deployment
-
-### Option 1: Using Deployment Script
-```bash
-python scripts/deploy.py heroku
-```
-
-### Option 2: Manual Heroku Deployment
-```bash
-# Login to Heroku
-heroku login
-
-# Create app
-heroku create your-app-name
-
-# Set environment variables
-heroku config:set SECRET_KEY=your-secret-key-here
-heroku config:set DATABASE_URL=sqlite:///cybersec_alerts.db
-
-# Deploy
-git add .
-git commit -m "Deploy to Heroku"
-git push heroku main
-
-# Open app
-heroku open
-```
-
-### Heroku Add-ons (Optional)
-```bash
-# Add PostgreSQL database
-heroku addons:create heroku-postgresql:mini
-
-# Add Redis for caching
-heroku addons:create heroku-redis:mini
-```
 
 ## 🏠 Local Production Deployment
 
@@ -115,6 +32,8 @@ pip install -r requirements.txt
 # Set environment variables
 export SECRET_KEY=your-secret-key-here
 export DATABASE_URL=sqlite:///cybersec_alerts.db
+# For local development, use port 8000
+export GITHUB_REDIRECT_URI=http://localhost:8000/api/v1/auth/github/callback
 
 # Initialize database
 python scripts/setup_database.py
@@ -140,6 +59,12 @@ FROM_EMAIL=noreply@yourdomain.com
 
 # NVD API (optional)
 NVD_API_KEY=your-nvd-api-key
+
+# GitHub OAuth (optional)
+GITHUB_CLIENT_ID=your_github_client_id_here
+GITHUB_CLIENT_SECRET=your_github_client_secret_here
+# For local development (port 8000)
+GITHUB_REDIRECT_URI=http://localhost:8000/api/v1/auth/github/callback
 ```
 
 ### Optional Environment Variables
@@ -150,7 +75,7 @@ APP_VERSION=1.0.0
 DEBUG=false
 
 # CORS
-CORS_ORIGINS=["http://localhost:3000", "https://yourdomain.com"]
+CORS_ORIGINS=["http://localhost:3000", "http://localhost:8000", "https://yourdomain.com"]
 
 # Scraper settings
 SCRAPER_INTERVAL_HOURS=6
@@ -274,6 +199,12 @@ chmod +x scripts/deploy.py
 chmod +x scripts/start_server.py
 ```
 
+#### GitHub OAuth Issues
+- Ensure the callback URL in your GitHub OAuth App matches your deployment
+- For local development: `http://localhost:8000/api/v1/auth/github/callback`
+- For Docker: `http://localhost:8001/api/v1/auth/github/callback`
+- For production: `https://yourdomain.com/api/v1/auth/github/callback`
+
 ### Debug Mode
 ```bash
 # Enable debug logging
@@ -294,4 +225,4 @@ For deployment issues:
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Docker Documentation](https://docs.docker.com/)
 - [Heroku Documentation](https://devcenter.heroku.com/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/) 
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
