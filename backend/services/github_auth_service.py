@@ -9,9 +9,9 @@ token exchange, and user information retrieval.
 import httpx
 from typing import Optional, Dict, Any
 from backend.config import settings
-from backend.services.auth_service import AuthService
+from backend.services.auth_service import create_access_token
 from backend.models.user import User
-from backend.database.db import get_async_session
+from backend.database.db import AsyncSessionLocal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import logging
@@ -25,7 +25,6 @@ class GitHubAuthService:
         self.client_id = settings.github_client_id
         self.client_secret = settings.github_client_secret
         self.redirect_uri = settings.github_redirect_uri
-        self.auth_service = AuthService()
         
         if not self.client_id or not self.client_secret:
             logger.warning("GitHub OAuth credentials not configured")
@@ -144,22 +143,21 @@ class GitHubAuthService:
                 return None
             
             # Get or create user
-            async for session in get_async_session():
+            async with AsyncSessionLocal() as session:
                 user = await self._get_or_create_user(session, user_info)
                 if not user:
                     return None
                 
                 # Generate JWT token
                 token_data = {
-                    "sub": str(user.id),
-                    "email": user.email,
+                    "sub": user.email,
                     "is_active": user.is_active
                 }
                 
-                access_token = self.auth_service.create_access_token(token_data)
+                jwt_token = create_access_token(token_data)
                 
                 return {
-                    "access_token": access_token,
+                    "access_token": jwt_token,
                     "token_type": "bearer",
                     "user": {
                         "id": user.id,
