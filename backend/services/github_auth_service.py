@@ -9,6 +9,8 @@ token exchange, and user information retrieval.
 import httpx
 from typing import Optional, Dict, Any
 from fastapi import HTTPException, Request
+from fastapi.responses import JSONResponse
+from starlette.responses import Response
 from backend.config import settings
 from backend.services.auth_service import create_access_token
 from backend.models.user import User
@@ -140,19 +142,21 @@ class GitHubAuthService:
                     user_data["email"] = primary_email
             return user_data
     
-    async def authenticate_user(self, code: str) -> Optional[Dict[str, Any]]:
+    async def authenticate_user(self, code: str, session_state: str, state: str) -> Optional[Dict[str, Any]]:
         """
         Complete GitHub OAuth authentication flow.
         
         Args:
             code: Authorization code from GitHub
-            
+            session_state: State from the user's session
+            state: State from the GitHub callback
+        
         Returns:
             Authentication result with user info and JWT token
         """
         try:
             # Exchange code for token
-            access_token = await self.exchange_code_for_token(code)
+            access_token = await self.exchange_code_for_token(code, session_state, state)
             if not access_token:
                 print("No access token received from GitHub.")
                 return None
@@ -182,7 +186,7 @@ class GitHubAuthService:
                     "user": {
                         "id": user.id,
                         "email": user.email,
-                        "name": user.name,
+                        "name": user.full_name,
                         "is_active": user.is_active
                     }
                 }
@@ -215,8 +219,8 @@ class GitHubAuthService:
         
         if user:
             # Update user info if needed
-            if not user.name and user_info.get("name"):
-                user.name = user_info["name"]
+            if not user.full_name and user_info.get("name"):
+                user.full_name = user_info["name"]
             await session.commit()
             return user
         
@@ -224,7 +228,7 @@ class GitHubAuthService:
         try:
             user = User(
                 email=email,
-                name=user_info.get("name", ""),
+                full_name=user_info.get("name", ""),
                 is_active=True,
                 is_verified=True  # GitHub users are considered verified
             )
@@ -239,15 +243,16 @@ class GitHubAuthService:
             return None
 
 # Global instance
-github_auth_service = GitHubAuthService()
+github_auth_service: GitHubAuthService = GitHubAuthService()
 
-async def github_callback(code: str, state: str):
+async def github_callback(code: str, state: str, session_state: str) -> Dict[str, Any]:
     """
     GitHub OAuth2 callback endpoint.
     
     Args:
         code: Authorization code received from GitHub
         state: CSRF protection state parameter
+        session_state: State stored in the user's session for CSRF protection
     
     Returns:
         Redirect response or error message
@@ -262,10 +267,10 @@ async def github_callback(code: str, state: str):
     async with httpx.AsyncClient() as client:
         headers = {"Accept": "application/json"}
         data = {
-            "client_id": GITHUB_CLIENT_ID,
-            "client_secret": GITHUB_CLIENT_SECRET,
+            "client_id": settings.github_client_id,
+            "client_secret": settings.github_client_secret,
             "code": code,
-            "redirect_uri": GITHUB_REDIRECT_URI,
+            "redirect_uri": settings.github_redirect_uri,
         }
         print(f"Sending data to GitHub: {data}")
         response = await client.post(
@@ -288,12 +293,32 @@ async def github_callback(code: str, state: str):
             print("Error: No access token received from GitHub.")
             raise HTTPException(status_code=400, detail="No access token received from GitHub")
 
-        # Proceed with user authentication
-        result = await github_auth_service.authenticate_user(access_token)
-        if not result:
-            print("Error: User authentication failed.")
+        # Get user information
+        user_info = await github_auth_service.get_user_info(access_token)
+        if not user_info:
+            print("No user info received from GitHub.")
+            raise HTTPException(status_code=400, detail="No user info received from GitHub")
+    # Get or create user
+    async with AsyncSessionLocal() as session:
+        user = await github_auth_service._get_or_create_user(session, user_info)
+        if not user:
+            print("Failed to get or create user from GitHub info.")
             raise HTTPException(status_code=400, detail="User authentication failed")
-
-        # Successful authentication, redirect or respond with user info
-        print("GitHub authentication successful")
-        return result
+        # Generate JWT token
+        token_data = {
+            "sub": user.email,
+            "is_active": user.is_active
+        }
+        jwt_token = create_access_token(token_data)
+        result = {
+            "access_token": jwt_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "name": user.full_name,
+                "is_active": user.is_active
+            }
+        }
+    print("GitHub authentication successful")
+    return result

@@ -36,7 +36,7 @@ limiter = Limiter(key_func=get_remote_address)
 async def lifespan(app: FastAPI):
     """Application lifespan events."""
     # Startup
-    logger.info("Starting CyberSec Alert SaaS...")
+    logger.info("Starting OneAlert...")
     
     # Start scheduler
     scheduler.start()
@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="A SaaS for monitoring cybersecurity alerts.",
+    description="A SaaS for monitoring cybersecurity alerts. Welcome to OneAlert.",
     lifespan=lifespan
 )
 
@@ -120,7 +120,7 @@ def health_check():
     """Health check endpoint."""
     return {
         "status": "healthy",
-        "app_name": settings.app_name,
+        "app_name": settings.app_name,  # Should now be 'OneAlert'
         "version": settings.app_version
     }
 

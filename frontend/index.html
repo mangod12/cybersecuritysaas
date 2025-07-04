@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberSec Alert SaaS</title>
+    <title>OneAlert</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
@@ -245,7 +245,7 @@ function renderLogin(showRegister = false) {
           <div class="logo-icon">
             <i class="fas fa-shield-alt"></i>
           </div>
-          <div class="logo-text">CyberSec Alert</div>
+          <div class="logo-text">OneAlert</div>
           <div class="logo-subtitle">Enterprise Security Monitoring</div>
         </div>
         <div id="login-register-toggle" style="text-align:center; margin-bottom:1rem;">
@@ -342,7 +342,20 @@ function renderLogin(showRegister = false) {
 
 async function githubLogin() {
     try {
-        const response = await axios.get(`${API_BASE}/auth/github/login`);
+        // Generate a secure random state value
+        const state = crypto.randomUUID();
+        // Set the state in a secure cookie for CSRF protection
+        // For local dev, use SameSite=Lax; for production/cross-site, use SameSite=None; Secure
+        let cookieOptions = 'path=/;';
+        if (location.protocol === 'https:') {
+            cookieOptions += ' SameSite=None; Secure;';
+        } else {
+            cookieOptions += ' SameSite=Lax;';
+        }
+        document.cookie = `github_oauth_state=${state}; ${cookieOptions}`;
+        // Get the GitHub auth URL from the backend, passing the state
+        const response = await axios.get(`${API_BASE}/auth/github/login`, { params: { state } });
+        // Redirect to GitHub
         window.location.href = response.data.auth_url;
     } catch (error) {
         showAlert('GitHub login failed: ' + (error.response?.data?.detail || 'Unknown error'));
@@ -351,10 +364,25 @@ async function githubLogin() {
 
 // Check for GitHub OAuth callback
 function checkGitHubCallback() {
+    // Check for token in URL fragment (after redirect)
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#github_token=')) {
+        const token = hash.replace('#github_token=', '');
+        if (token) {
+            authToken = token;
+            localStorage.setItem('authToken', authToken);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            showAlert('GitHub login successful!', 'success');
+            renderDashboard();
+            return;
+        }
+    }
+    // Fallback: legacy code path
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const state = urlParams.get('state');
-    
     if (code) {
         handleGitHubCallback(code, state);
     }

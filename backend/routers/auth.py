@@ -4,7 +4,7 @@ Handles user authentication, password hashing, and JWT token creation/validation
 """
 
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -139,10 +139,11 @@ async def verify_user_token(current_user: User = Depends(get_active_user)):
 
 
 @router.get("/github/login")
-async def github_login():
+async def github_login(state: Optional[str] = None):
     """Get GitHub OAuth authorization URL."""
     try:
-        auth_url = github_auth_service.get_authorization_url()
+        # Pass the state from the frontend to the service
+        auth_url = github_auth_service.get_authorization_url(state)
         return {"auth_url": auth_url}
     except ValueError as e:
         raise HTTPException(
@@ -157,26 +158,35 @@ async def github_login():
 
 
 @router.get("/github/callback")
-async def github_callback(code: str, state: Optional[str] = None):
+async def github_callback(request: Request, code: str, state: Optional[str] = None):
     """Handle GitHub OAuth callback and authenticate user."""
+    from fastapi.responses import RedirectResponse
     try:
-        # Complete GitHub OAuth flow
-        result = await github_auth_service.authenticate_user(code)
-        
+        # Retrieve session_state from secure cookie/session (example: signed cookie)
+        session_state = request.cookies.get("github_oauth_state")
+        if not session_state:
+            raise HTTPException(status_code=400, detail="Session state missing for CSRF protection")
+        if not state:
+            raise HTTPException(status_code=400, detail="State parameter missing from GitHub callback")
+        # Complete GitHub OAuth flow with CSRF protection
+        result = await github_auth_service.authenticate_user(code, session_state, state)
         if not result:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="GitHub authentication failed"
             )
-        
-        return result
-        
+        # Redirect to frontend with token in URL fragment (for JS to pick up)
+        access_token = result.get("access_token")
+        if access_token:
+            redirect_url = f"/index.html#github_token={access_token}"
+            return RedirectResponse(url=redirect_url)
+        return RedirectResponse(url="/index.html?github_error=1")
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"GitHub OAuth error: {str(e)}"
+            detail=f"GitHub callback failed: {str(e)}"
         )
 
 

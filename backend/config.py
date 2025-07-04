@@ -68,7 +68,7 @@ class Settings(BaseSettings):
 
     # Application Core Configuration
     # Name of the application.
-    app_name: str = "CyberSec Alert SaaS"
+    app_name: str = "OneAlert"
     
     # Current version of the application.
     app_version: str = "1.0.0"
@@ -100,6 +100,18 @@ class Settings(BaseSettings):
     
     # GitHub OAuth redirect URI (port 8000 for local)
     github_redirect_uri: str = "http://localhost:8000/api/v1/auth/github/callback"
+
+    # --- Added for .env compatibility and full integration ---
+    POSTGRES_PASSWORD: Optional[str] = None
+    SLACK_WEBHOOK_URL: Optional[str] = None
+    TEAMS_WEBHOOK_URL: Optional[str] = None
+    GENERIC_WEBHOOK_URL: Optional[str] = None
+    SIEM_HEC_URL: Optional[str] = None
+    SIEM_HEC_TOKEN: Optional[str] = None
+    # If you use POSTGRES_USER and POSTGRES_DB in your docker-compose, add them here too:
+    POSTGRES_USER: Optional[str] = None
+    POSTGRES_DB: Optional[str] = None
+    # ------------------------------------------------------------
 
     # Pydantic Model Configuration
     # Tells Pydantic how to load and manage settings.
