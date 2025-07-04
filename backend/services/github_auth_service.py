@@ -8,6 +8,7 @@ token exchange, and user information retrieval.
 
 import httpx
 from typing import Optional, Dict, Any
+from fastapi import HTTPException, Request
 from backend.config import settings
 from backend.services.auth_service import create_access_token
 from backend.models.user import User
@@ -55,37 +56,58 @@ class GitHubAuthService:
         query_string = "&".join([f"{k}={v}" for k, v in params.items()])
         return f"https://github.com/login/oauth/authorize?{query_string}"
     
-    async def exchange_code_for_token(self, code: str) -> Optional[str]:
+    async def exchange_code_for_token(self, code: str, session_state: str, state: str) -> Optional[str]:
         """
         Exchange authorization code for access token.
         
         Args:
             code: Authorization code from GitHub
+            session_state: State from the user's session
+            state: State from the GitHub callback
             
         Returns:
             Access token or None if exchange failed
         """
+        print(f"GitHub callback initiated. Received state: {state}, session state: {session_state}")
+
+        if not state or state != session_state:
+            print("Error: State mismatch in GitHub callback.")
+            raise HTTPException(status_code=400, detail="Invalid state")
+
         if not self.client_id or not self.client_secret:
             raise ValueError("GitHub OAuth credentials not configured")
         
+        print(f"Requesting access token from GitHub with code: {code}")
         async with httpx.AsyncClient() as client:
+            headers = {"Accept": "application/json"}
+            data = {
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "code": code,
+                "redirect_uri": self.redirect_uri,
+            }
+            print(f"Sending data to GitHub: {data}")
             response = await client.post(
                 "https://github.com/login/oauth/access_token",
-                data={
-                    "client_id": self.client_id,
-                    "client_secret": self.client_secret,
-                    "code": code,
-                    "redirect_uri": self.redirect_uri
-                },
-                headers={"Accept": "application/json"}
+                headers=headers,
+                json=data,
             )
-            if response.status_code == 200:
-                data = response.json()
-                return data.get("access_token")
-            else:
-                logger.error(f"Failed to exchange code for token: {response.text}")
-                print(f"Failed to exchange code for token: {response.text}")
-                return None
+            print(f"GitHub response status code: {response.status_code}")
+            print(f"GitHub response content: {response.text}")
+
+            if response.status_code != 200:
+                print(f"Error fetching access token from GitHub: {response.text}")
+                raise HTTPException(status_code=400, detail="Could not fetch access token from GitHub")
+
+            response_data = response.json()
+            print(f"GitHub response data: {response_data}")
+            access_token = response_data.get("access_token")
+
+            if not access_token:
+                print("Error: No access token received from GitHub.")
+                raise HTTPException(status_code=400, detail="No access token received from GitHub")
+            
+            return access_token
     
     async def get_user_info(self, access_token: str) -> Optional[Dict[str, Any]]:
         """
@@ -218,3 +240,60 @@ class GitHubAuthService:
 
 # Global instance
 github_auth_service = GitHubAuthService()
+
+async def github_callback(code: str, state: str):
+    """
+    GitHub OAuth2 callback endpoint.
+    
+    Args:
+        code: Authorization code received from GitHub
+        state: CSRF protection state parameter
+    
+    Returns:
+        Redirect response or error message
+    """
+    print(f"GitHub callback initiated. Received state: {state}, session state: {session_state}")
+
+    if not state or state != session_state:
+        print("Error: State mismatch in GitHub callback.")
+        raise HTTPException(status_code=400, detail="Invalid state")
+
+    print(f"Requesting access token from GitHub with code: {code}")
+    async with httpx.AsyncClient() as client:
+        headers = {"Accept": "application/json"}
+        data = {
+            "client_id": GITHUB_CLIENT_ID,
+            "client_secret": GITHUB_CLIENT_SECRET,
+            "code": code,
+            "redirect_uri": GITHUB_REDIRECT_URI,
+        }
+        print(f"Sending data to GitHub: {data}")
+        response = await client.post(
+            "https://github.com/login/oauth/access_token",
+            headers=headers,
+            json=data,
+        )
+        print(f"GitHub response status code: {response.status_code}")
+        print(f"GitHub response content: {response.text}")
+
+        if response.status_code != 200:
+            print(f"Error fetching access token from GitHub: {response.text}")
+            raise HTTPException(status_code=400, detail="Could not fetch access token from GitHub")
+
+        response_data = response.json()
+        print(f"GitHub response data: {response_data}")
+        access_token = response_data.get("access_token")
+
+        if not access_token:
+            print("Error: No access token received from GitHub.")
+            raise HTTPException(status_code=400, detail="No access token received from GitHub")
+
+        # Proceed with user authentication
+        result = await github_auth_service.authenticate_user(access_token)
+        if not result:
+            print("Error: User authentication failed.")
+            raise HTTPException(status_code=400, detail="User authentication failed")
+
+        # Successful authentication, redirect or respond with user info
+        print("GitHub authentication successful")
+        return result

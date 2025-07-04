@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OEM Vulnerability Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ user.username }} ({{ user.role }})</h1>
+    <h2>Active & Past Alerts</h2>
+    <ul>
+    {% for alert in alerts %}
+        <li><b>{{ alert.cve_id }}</b>: {{ alert.title }} (<a href="{{ alert.url }}">link</a>)</li>
+    {% endfor %}
+    </ul>
+</body>
+</html> 

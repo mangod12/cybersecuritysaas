@@ -13,8 +13,12 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from backend.database.db import Base
 from pydantic import BaseModel, Field, EmailStr  # Ensure compatibility with Pydantic v2
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
+from fastapi import Depends, HTTPException, status
+from backend.database.db import get_async_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 
 class User(Base):
@@ -36,6 +40,15 @@ class User(Base):
     github_username = Column(String, nullable=True)
     avatar_url = Column(String, nullable=True)
     auth_provider = Column(String, default="email")  # "email" or "github"
+    role = Column(String, default="viewer")  # 'admin', 'analyst', 'viewer'
+
+    # Slack and webhook URLs
+    slack_webhook_url = Column(String, nullable=True)
+    webhook_url = Column(String, nullable=True)
+
+    # MFA fields
+    mfa_enabled = Column(Boolean, default=False)
+    mfa_secret = Column(String, nullable=True)
 
     # Relationships
     assets = relationship("Asset", back_populates="user", cascade="all, delete-orphan")
@@ -48,6 +61,10 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: Optional[str] = None
     company: Optional[str] = None
+    slack_webhook_url: Optional[str] = None
+    webhook_url: Optional[str] = None
+    mfa_enabled: Optional[bool] = False
+    mfa_secret: Optional[str] = None
     
     model_config = {"from_attributes": True}
 
@@ -67,6 +84,8 @@ class GitHubUserCreate(BaseModel):
     full_name: Optional[str] = None
     company: Optional[str] = None
     avatar_url: Optional[str] = None
+    slack_webhook_url: Optional[str] = None
+    webhook_url: Optional[str] = None
     
     model_config = {"from_attributes": True}
 
@@ -76,6 +95,10 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     company: Optional[str] = None
     password: Optional[str] = None
+    slack_webhook_url: Optional[str] = None
+    webhook_url: Optional[str] = None
+    mfa_enabled: Optional[bool] = False
+    mfa_secret: Optional[str] = None
     
     model_config = {"from_attributes": True}
 
@@ -87,6 +110,10 @@ class UserResponse(UserBase):
     is_verified: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
+    slack_webhook_url: Optional[str] = None
+    webhook_url: Optional[str] = None
+    mfa_enabled: Optional[bool] = False
+    mfa_secret: Optional[str] = None
     
     model_config = {"from_attributes": True}
 
@@ -104,3 +131,8 @@ class TokenData(BaseModel):
     email: Optional[str] = None
     
     model_config = {"from_attributes": True}
+
+
+async def list_users(db: AsyncSession = Depends(get_async_db)) -> List[User]:
+    result = await db.execute(select(User))
+    return result.scalars().all()

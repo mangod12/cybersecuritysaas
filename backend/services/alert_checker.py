@@ -9,16 +9,46 @@ from typing import List, Dict, Set
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import re
+import os
 
 from backend.database.db import AsyncSessionLocal
 from backend.models.user import User
 from backend.models.asset import Asset
 from backend.models.alert import Alert, Severity, AlertStatus
+from backend.models.audit_log import AuditLog
 from backend.services.cve_scraper import cve_scraper
 from backend.services.vendor_scraper import vendor_scraper
 from backend.services.email_alert import email_service
+from backend.services.notification_service import notify_all_services
+from backend.services.cve_enrichment import CVEEnrichmentService
+from backend.services.slack_webhook import SlackNotificationService, WebhookNotificationService
 
 logger = logging.getLogger(__name__)
+
+# Notification service instances (read from env)
+slack_webhook = os.getenv("SLACK_WEBHOOK_URL")
+generic_webhook = os.getenv("GENERIC_WEBHOOK_URL")
+
+slack_service = SlackNotificationService(slack_webhook) if slack_webhook else None
+webhook_service = WebhookNotificationService(generic_webhook) if generic_webhook else None
+
+cve_enrichment_service = CVEEnrichmentService()
+
+async def notify_all_services(message: str, user: User = None, **kwargs):
+    # Prefer user-specific webhooks if set
+    user_slack = getattr(user, 'slack_webhook_url', None)
+    user_webhook = getattr(user, 'webhook_url', None)
+    slack_url = user_slack or slack_webhook
+    webhook_url = user_webhook or generic_webhook
+    slack_service = SlackNotificationService(slack_url) if slack_url else None
+    webhook_service = WebhookNotificationService(webhook_url) if webhook_url else None
+    tasks = []
+    if slack_service:
+        tasks.append(slack_service.send(message, **kwargs))
+    if webhook_service:
+        tasks.append(webhook_service.send(message, **kwargs))
+    if tasks:
+        await asyncio.gather(*tasks)
 
 
 class AlertChecker:
@@ -217,6 +247,10 @@ class AlertChecker:
     async def _create_alert_from_cve(self, db: AsyncSession, user: User, asset: Asset, cve: Dict):
         """Create an alert from CVE data."""
         try:
+            # Enrich CVE data
+            enrichment = await cve_enrichment_service.enrich_cve(cve.get('cve_id'))
+            cve.update(enrichment)
+            
             # Check if alert already exists
             existing = await db.execute(
                 select(Alert).where(
@@ -237,6 +271,8 @@ class AlertChecker:
                 description=cve.get('description', ''),
                 severity=cve.get('severity', 'unknown'),
                 cvss_score=cve.get('cvss_score'),
+                exploitability=cve.get('exploitability'),
+                remediation=cve.get('remediation'),
                 source_url=cve.get('source_url'),
                 status=AlertStatus.PENDING
             )
@@ -247,7 +283,13 @@ class AlertChecker:
             # Send email alert
             await email_service.send_vulnerability_alert(user, asset, alert, cve)
             
+            # Send notifications
+            await notify_all_services(f"New CVE alert for {user.email}: {alert.title}", alert_id=alert.id, cve_id=alert.cve_id)
+            
             logger.info(f"Created CVE alert {cve.get('cve_id')} for user {user.email}")
+            
+            # Log audit trail
+            await self.log_audit(db, user.id, action="create_alert", target_type="CVE", target_id=cve.get('cve_id'), detail=str(alert))
             
         except Exception as e:
             logger.error(f"Error creating CVE alert: {e}")
@@ -284,10 +326,26 @@ class AlertChecker:
             # Send email alert
             await email_service.send_vendor_advisory_alert(user, asset, alert, advisory)
             
+            # Send notifications
+            await notify_all_services(f"New vendor alert for {user.email}: {alert.title}", alert_id=alert.id, vendor_advisory_id=alert.vendor_advisory_id)
+            
             logger.info(f"Created vendor alert {advisory.get('vendor_advisory_id')} for user {user.email}")
+            
+            # Log audit trail
+            await self.log_audit(db, user.id, action="create_alert", target_type="Vendor Advisory", target_id=advisory.get('vendor_advisory_id'), detail=str(alert))
             
         except Exception as e:
             logger.error(f"Error creating vendor advisory alert: {e}")
+    
+    async def log_audit(self, db: AsyncSession, user_id: int, action: str, target_type: str = None, target_id: str = None, detail: str = None):
+        """Log an audit trail entry."""
+        try:
+            audit = AuditLog(user_id=user_id, action=action, target_type=target_type, target_id=target_id, detail=detail)
+            db.add(audit)
+            await db.commit()
+            logger.info(f"Logged audit trail: {action} by user {user_id} on {target_type} {target_id}")
+        except Exception as e:
+            logger.error(f"Error logging audit trail: {e}")
 
 
 # Global alert checker instance

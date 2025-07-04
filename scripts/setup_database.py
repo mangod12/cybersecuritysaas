@@ -12,6 +12,8 @@ from pathlib import Path
 project_root = Path(__file__).resolve().parent.parent # Modified path
 sys.path.insert(0, str(project_root))
 
+from sqlalchemy import text
+
 async def create_database():
     """Create database tables and seed data."""
     try:
@@ -46,6 +48,45 @@ async def create_database():
         import traceback
         traceback.print_exc()
         return False
+
+# --- DB Migration for Alert enrichment fields ---
+def migrate_alert_table_for_enrichment(engine):
+    with engine.connect() as conn:
+        conn.execute(text('ALTER TABLE alerts ADD COLUMN IF NOT EXISTS exploitability FLOAT'))
+        conn.execute(text('ALTER TABLE alerts ADD COLUMN IF NOT EXISTS remediation VARCHAR'))
+        conn.commit()
+
+def migrate_user_table_for_role(engine):
+    with engine.connect() as conn:
+        try:
+            conn.execute(text('ALTER TABLE users ADD COLUMN role VARCHAR DEFAULT "viewer"'))
+            conn.commit()
+        except Exception as e:
+            print(f"[INFO] Could not add 'role' column (may already exist): {e}")
+
+def migrate_user_table_for_webhooks(engine):
+    with engine.connect() as conn:
+        try:
+            conn.execute(text('ALTER TABLE users ADD COLUMN slack_webhook_url VARCHAR'))
+        except Exception as e:
+            print(f"[INFO] Could not add 'slack_webhook_url' column (may already exist): {e}")
+        try:
+            conn.execute(text('ALTER TABLE users ADD COLUMN webhook_url VARCHAR'))
+        except Exception as e:
+            print(f"[INFO] Could not add 'webhook_url' column (may already exist): {e}")
+        conn.commit()
+
+def migrate_user_table_for_mfa(engine):
+    with engine.connect() as conn:
+        try:
+            conn.execute(text('ALTER TABLE users ADD COLUMN mfa_enabled BOOLEAN DEFAULT 0'))
+        except Exception as e:
+            print(f"[INFO] Could not add 'mfa_enabled' column (may already exist): {e}")
+        try:
+            conn.execute(text('ALTER TABLE users ADD COLUMN mfa_secret VARCHAR'))
+        except Exception as e:
+            print(f"[INFO] Could not add 'mfa_secret' column (may already exist): {e}")
+        conn.commit()
 
 async def main():
     """Main initialization function."""

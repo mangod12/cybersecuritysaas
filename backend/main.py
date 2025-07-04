@@ -3,22 +3,33 @@ FastAPI main application entry point.
 Configures the API, middleware, routers, and startup/shutdown events.
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import logging
 import os
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+import pyotp
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import settings
-from backend.routers import auth, alerts, assets
+from backend.routers import auth, alerts, assets, dashboard
 from backend.scheduler.cron import scheduler
+from backend.models.audit_log import AuditLog
+from backend.database.db import get_async_db
 
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+limiter = Limiter(key_func=get_remote_address)
 
 
 @asynccontextmanager
@@ -46,6 +57,10 @@ app = FastAPI(
     description="A SaaS for monitoring cybersecurity alerts.",
     lifespan=lifespan
 )
+
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+app.add_exception_handler(RateLimitExceeded, lambda r, e: JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"}))
 
 # CORS configuration
 origins = [
@@ -96,6 +111,7 @@ async def general_exception_handler(request, exc):
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["alerts"])
 app.include_router(assets.router, prefix="/api/v1/assets", tags=["assets"])
+app.include_router(dashboard.router)
 
 
 # Health check endpoint
@@ -122,3 +138,18 @@ else:
     @app.get("/")
     async def root():
         return {"message": "Frontend not found", "docs": "/docs", "health": "/health"}
+
+# --- MFA and Audit Logging for login ---
+@app.post("/api/v1/auth/login")
+@limiter.limit("5/minute")
+async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), request: Request = None, db: AsyncSession = Depends(get_async_db)):
+    # ...existing login logic...
+    # MFA check (if enabled for user)
+    # if user.mfa_enabled:
+    #     # Prompt for TOTP code and verify with pyotp
+    #     ...
+    # Audit log
+    # audit = AuditLog(user_id=user.id, action="login", detail=f"IP: {request.client.host if request else 'unknown'}")
+    # db.add(audit)
+    # await db.commit()
+    pass  # Placeholder for future audit logging

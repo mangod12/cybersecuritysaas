@@ -9,11 +9,13 @@
 # FastAPI and ASGI server
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
+gunicorn
 
 # Database
 sqlalchemy==2.0.30
 alembic==1.13.1
 aiosqlite==0.20.0       # Async SQLite driver
+psycopg2-binary
 
 # Authentication
 python-jose[cryptography]==3.3.0
@@ -50,3 +52,16 @@ pytest-asyncio==0.23.6
 black==24.4.2
 flake8==7.0.0
 isort==5.13.2
+
+# Added asyncpg
+asyncpg
+
+# Celery and Redis for task queues
+celery==5.4.0
+redis==5.0.4
+
+# Rate limiting
+slowapi==0.1.8
+
+# Multi-factor authentication
+pyotp==2.9.0

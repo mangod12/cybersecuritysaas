@@ -52,6 +52,8 @@ class Alert(Base):
     sent_at = Column(DateTime(timezone=True), nullable=True)
     acknowledged_at = Column(DateTime(timezone=True), nullable=True)
     source_url = Column(String, nullable=True)
+    exploitability = Column(Float, nullable=True)
+    remediation = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -86,6 +88,8 @@ class AlertBase(BaseModel):
     description: Optional[str] = None
     severity: Severity
     cvss_score: Optional[float] = None
+    exploitability: Optional[float] = None
+    remediation: Optional[str] = None
     source_url: Optional[str] = None
     
     model_config = {"from_attributes": True}
@@ -103,9 +107,12 @@ class AlertRead(AlertBase):
     id: int
     user_id: int
     asset_id: int
-    status: AlertStatus
+    cve_id: Optional[str] = None
+    vendor_advisory_id: Optional[str] = None
+    status: str
     sent_at: Optional[datetime] = None
     acknowledged_at: Optional[datetime] = None
+    source_url: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     
@@ -164,3 +171,8 @@ class AlertStats(BaseModel):
     acknowledged_alerts: int
     
     model_config = {"from_attributes": True }
+
+
+def get_alerts():
+    """Return a list of alerts (stub for dashboard)."""
+    return []

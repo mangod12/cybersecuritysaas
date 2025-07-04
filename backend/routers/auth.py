@@ -8,10 +8,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import Optional
+from typing import Optional, List
 
 from backend.database.db import get_async_db
 from backend.models.user import User, UserCreate, UserResponse, Token, GitHubUserCreate
+from backend.models.audit_log import AuditLog
 from backend.services.auth_service import (
     create_access_token,
     verify_password,
@@ -177,3 +178,68 @@ async def github_callback(code: str, state: Optional[str] = None):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"GitHub OAuth error: {str(e)}"
         )
+
+
+@router.patch("/me/integrations", response_model=UserResponse)
+async def update_my_integrations(
+    slack_webhook_url: Optional[str] = None,
+    webhook_url: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db)
+):
+    """Update Slack/Webhook integration URLs for the current user."""
+    if slack_webhook_url is not None:
+        current_user.slack_webhook_url = slack_webhook_url
+    if webhook_url is not None:
+        current_user.webhook_url = webhook_url
+    db.add(current_user)
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user
+
+
+@router.post("/me/mfa/setup", response_model=UserResponse)
+async def setup_mfa(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_async_db)):
+    """Enable MFA for the current user and return the TOTP secret."""
+    import pyotp
+    if current_user.mfa_enabled and current_user.mfa_secret:
+        return current_user
+    secret = pyotp.random_base32()
+    current_user.mfa_secret = secret
+    current_user.mfa_enabled = True
+    db.add(current_user)
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user
+
+
+@router.post("/me/mfa/verify", response_model=bool)
+async def verify_mfa(code: str, current_user: User = Depends(get_current_user)):
+    """Verify a TOTP code for the current user."""
+    import pyotp
+    if not current_user.mfa_enabled or not current_user.mfa_secret:
+        return False
+    totp = pyotp.TOTP(current_user.mfa_secret)
+    return totp.verify(code)
+
+
+@router.get("/audit-logs", response_model=List[dict])
+async def get_audit_logs(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_async_db)):
+    """Admin: Get all audit logs."""
+    # Only allow admin users
+    if not current_user.role or current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    result = await db.execute(select(AuditLog))
+    logs = result.scalars().all()
+    return [
+        {
+            "id": log.id,
+            "user_id": log.user_id,
+            "action": log.action,
+            "target_type": log.target_type,
+            "target_id": log.target_id,
+            "detail": log.detail,
+            "timestamp": log.timestamp.isoformat() if log.timestamp else None
+        }
+        for log in logs
+    ]

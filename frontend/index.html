@@ -418,6 +418,33 @@ async function fetchAlerts() {
     }
 }
 
+// Fetch audit logs (admin only)
+async function fetchAuditLogs() {
+    try {
+        const response = await axios.get(`${API_BASE}/auth/audit-logs`);
+        return response.data;
+    } catch (error) {
+        return [];
+    }
+}
+
+// Update integration settings
+async function updateIntegrations(slack, webhook) {
+    await axios.patch(`${API_BASE}/auth/me/integrations`, null, {
+        params: { slack_webhook_url: slack, webhook_url: webhook }
+    });
+}
+
+// MFA setup/verify
+async function setupMFA() {
+    const res = await axios.post(`${API_BASE}/auth/me/mfa/setup`);
+    return res.data;
+}
+async function verifyMFA(code) {
+    const res = await axios.post(`${API_BASE}/auth/me/mfa/verify`, null, { params: { code } });
+    return res.data;
+}
+
 function logout() {
     localStorage.removeItem('authToken');
     delete axios.defaults.headers.common['Authorization'];
@@ -450,6 +477,11 @@ async function renderDashboard(editAssetId = null, editAlertId = null, createAle
         return;
     }
     
+    let auditLogs = [];
+    if (user.role === 'admin') {
+        auditLogs = await fetchAuditLogs();
+    }
+    
     document.getElementById('app').innerHTML = `
     <div class="dashboard-container">
       <button class="logout-btn" onclick="logout()">Logout</button>
@@ -462,83 +494,137 @@ async function renderDashboard(editAssetId = null, editAlertId = null, createAle
           <div><b>Email:</b> ${user.email}</div>
         </div>
       </div>
+      <!-- Stats Section -->
       <div class="stats">
-        <div class="stat-card"><div class="stat-title">Critical Alerts</div><div class="stat-value" style="color:#dc3545;">${stats.critical_alerts || 0}</div></div>
-        <div class="stat-card"><div class="stat-title">High Alerts</div><div class="stat-value" style="color:#fd7e14;">${stats.high_alerts || 0}</div></div>
-        <div class="stat-card"><div class="stat-title">Medium Alerts</div><div class="stat-value" style="color:#ffc107;">${stats.medium_alerts || 0}</div></div>
-        <div class="stat-card"><div class="stat-title">Low Alerts</div><div class="stat-value" style="color:#28a745;">${stats.low_alerts || 0}</div></div>
-        <div class="stat-card"><div class="stat-title">Pending Alerts</div><div class="stat-value">${stats.pending_alerts || 0}</div></div>
+        <div class="stat-card">
+          <div class="stat-title">Total Alerts</div>
+          <div class="stat-value">${stats.total_alerts || 0}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Open Alerts</div>
+          <div class="stat-value">${stats.open_alerts || 0}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Assets</div>
+          <div class="stat-value">${assets.length || 0}</div>
+        </div>
       </div>
-      <div class="section">
-        <h3>Add New Asset</h3>
-        <form id="add-asset-form" style="margin-bottom:2rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;align-items:end;">
-          <div><input type="text" id="asset-name" placeholder="Name" required></div>
-          <div>
-            <select id="asset-type" required>
-              <option value="">Type</option>
-              <option value="hardware">Hardware</option>
-              <option value="software">Software</option>
-              <option value="firmware">Firmware</option>
-              <option value="operating_system">Operating System</option>
-            </select>
-          </div>
-          <div><input type="text" id="asset-vendor" placeholder="Vendor"></div>
-          <div><input type="text" id="asset-product" placeholder="Product"></div>
-          <div><input type="text" id="asset-version" placeholder="Version"></div>
-          <div><input type="text" id="asset-description" placeholder="Description"></div>
-          <div><button type="submit">Add Asset</button></div>
-        </form>
-        <h3>Your Assets</h3>
-        <table><thead><tr><th>Name</th><th>Type</th><th>Vendor</th><th>Product</th><th>Version</th><th>Action</th></tr></thead><tbody>
-        ${assets.map(a => editAssetId === a.id ? `
-          <tr>
-            <td colspan="6">
-              <form id="edit-asset-form-${a.id}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.5rem;align-items:end;">
-                <input type="text" id="edit-asset-name" value="${a.name}" required>
-                <select id="edit-asset-type" required>
-                  <option value="hardware" ${a.asset_type==='hardware'?'selected':''}>Hardware</option>
-                  <option value="software" ${a.asset_type==='software'?'selected':''}>Software</option>
-                  <option value="firmware" ${a.asset_type==='firmware'?'selected':''}>Firmware</option>
-                  <option value="operating_system" ${a.asset_type==='operating_system'?'selected':''}>Operating System</option>
-                </select>
-                <input type="text" id="edit-asset-vendor" value="${a.vendor||''}">
-                <input type="text" id="edit-asset-product" value="${a.product||''}">
-                <input type="text" id="edit-asset-version" value="${a.version||''}">
-                <input type="text" id="edit-asset-description" value="${a.description||''}">
-                <button type="submit">Save</button>
-                <button type="button" id="cancel-edit-btn">Cancel</button>
-              </form>
-            </td>
-          </tr>
-        ` : `
-          <tr><td>${a.name}</td><td>${a.asset_type}</td><td>${a.vendor||''}</td><td>${a.product||''}</td><td>${a.version||''}</td><td>
-            <button class='btn btn-small' style='background:#ffc107;color:#333;' onclick='editAsset(${a.id})'>Edit</button>
-            <button class='btn btn-small' style='background:#dc3545' onclick='deleteAsset(${a.id})'>Delete</button>
-          </td></tr>
-        `).join('') || '<tr><td colspan="6">No assets found.</td></tr>'}
-        </tbody></table>
-      </div>
+      <!-- Alerts Table with Enrichment -->
       <div class="section">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <h3>Recent Alerts</h3>
         </div>
-        <table><thead><tr><th>Title</th><th>Severity</th><th>Asset</th><th>CVE</th><th>Status</th><th>Action</th></tr></thead><tbody>
+        <table><thead><tr><th>Title</th><th>Severity</th><th>Asset</th><th>CVE</th><th>CVSS</th><th>Exploitability</th><th>Remediation</th><th>Status</th><th>Action</th></tr></thead><tbody>
         ${alerts.map(al => `
-          <tr><td>${al.title}</td><td>${al.severity}</td><td>${al.asset_name||''}</td><td>${al.cve_id||''}</td><td>${al.status}</td><td>
+          <tr><td>${al.title}</td><td>${al.severity}</td><td>${al.asset_name||''}</td><td>${al.cve_id||''}</td><td>${al.cvss_score||''}</td><td>${al.exploitability||''}</td><td>${al.remediation?`<a href='${al.remediation}' target='_blank'>Link</a>`:''}</td><td>${al.status}</td><td>
             <button class='btn btn-small' style='background:#28a745' onclick='ackAlert(${al.id})'>Acknowledge</button>
           </td></tr>
-        `).join('') || '<tr><td colspan="6">No alerts found.</td></tr>'}
+        `).join('') || '<tr><td colspan="9">No alerts found.</td></tr>'}
         </tbody></table>
       </div>
+      <!-- Assets/Services Section -->
       <div class="section">
-        <h3>User Profile</h3>
-        <div><b>Email:</b> ${user && user.email ? user.email : ''}</div>
-        <div><b>Full Name:</b> ${(user && user.full_name) ? user.full_name : 'N/A'}</div>
-        <div><b>Company:</b> ${(user && user.company) ? user.company : 'N/A'}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h3>Your Assets / Services</h3>
+        </div>
+        <form id="add-asset-form" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin-bottom:1rem;">
+          <input type="text" id="asset-name" placeholder="Name" required style="min-width:120px;">
+          <input type="text" id="asset-type" placeholder="Type (e.g. server, SaaS, app)" required style="min-width:120px;">
+          <input type="text" id="asset-vendor" placeholder="Vendor" style="min-width:120px;">
+          <input type="text" id="asset-product" placeholder="Product" style="min-width:120px;">
+          <input type="text" id="asset-version" placeholder="Version" style="min-width:100px;">
+          <input type="text" id="asset-description" placeholder="Description" style="min-width:180px;">
+          <button type="submit">Add Asset</button>
+        </form>
+        <table><thead><tr><th>Name</th><th>Type</th><th>Vendor</th><th>Product</th><th>Version</th><th>Description</th><th>Action</th></tr></thead><tbody>
+        ${assets.map(asset => editAssetId === asset.id ? `
+          <tr><td colspan="7">
+            <form id="edit-asset-form-${asset.id}" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end;">
+              <input type="text" id="edit-asset-name" value="${asset.name}" required style="min-width:120px;">
+              <input type="text" id="edit-asset-type" value="${asset.asset_type}" required style="min-width:120px;">
+              <input type="text" id="edit-asset-vendor" value="${asset.vendor||''}" style="min-width:120px;">
+              <input type="text" id="edit-asset-product" value="${asset.product||''}" style="min-width:120px;">
+              <input type="text" id="edit-asset-version" value="${asset.version||''}" style="min-width:100px;">
+              <input type="text" id="edit-asset-description" value="${asset.description||''}" style="min-width:180px;">
+              <button type="submit">Save</button>
+              <button type="button" id="cancel-edit-btn">Cancel</button>
+            </form>
+          </td></tr>
+        ` : `
+          <tr><td>${asset.name}</td><td>${asset.asset_type}</td><td>${asset.vendor||''}</td><td>${asset.product||''}</td><td>${asset.version||''}</td><td>${asset.description||''}</td><td>
+            <button class='btn btn-small' style='background:#ffc107;color:#333;' onclick='editAsset(${asset.id})'>Edit</button>
+            <button class='btn btn-small' style='background:#dc3545;' onclick='deleteAsset(${asset.id})'>Delete</button>
+          </td></tr>
+        `).join('') || '<tr><td colspan="7">No assets found.</td></tr>'}
+        </tbody></table>
       </div>
+      <!-- Integration Settings -->
+      <div class="section">
+        <h3>Notification Integrations</h3>
+        <form id="integration-form" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:end;">
+          <div><input type="text" id="slack-webhook" placeholder="Slack Webhook URL" value="${user.slack_webhook_url||''}" style="min-width:220px;"></div>
+          <div><input type="text" id="generic-webhook" placeholder="Generic Webhook URL" value="${user.webhook_url||''}" style="min-width:220px;"></div>
+          <div><button type="submit">Update</button></div>
+        </form>
+      </div>
+      <!-- MFA Section -->
+      <div class="section">
+        <h3>Multi-Factor Authentication (MFA)</h3>
+        <div id="mfa-status">${user.mfa_enabled ? 'Enabled' : 'Disabled'}</div>
+        <button id="setup-mfa-btn">${user.mfa_enabled ? 'Reset MFA' : 'Enable MFA'}</button>
+        <div id="mfa-setup-area"></div>
+      </div>
+      <!-- Audit Log Section (admin only) -->
+      ${user.role === 'admin' ? `
+      <div class="section">
+        <h3>Audit Logs</h3>
+        <table><thead><tr><th>ID</th><th>User</th><th>Action</th><th>Target</th><th>Detail</th><th>Time</th></tr></thead><tbody>
+        ${auditLogs.map(log => `
+          <tr><td>${log.id}</td><td>${log.user_id}</td><td>${log.action}</td><td>${log.target_type||''} ${log.target_id||''}</td><td>${log.detail||''}</td><td>${log.timestamp||''}</td></tr>
+        `).join('') || '<tr><td colspan="6">No logs found.</td></tr>'}
+        </tbody></table>
+      </div>
+      ` : ''}
+      <!-- ...existing asset/profile sections... -->
     </div>
     `;
     
+    // Integration form handler
+    document.getElementById('integration-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const slack = document.getElementById('slack-webhook').value;
+        const webhook = document.getElementById('generic-webhook').value;
+        try {
+            await updateIntegrations(slack, webhook);
+            showAlert('Integration settings updated!', 'success');
+            renderDashboard();
+        } catch (error) {
+            showAlert('Failed to update integrations: ' + (error.response?.data?.detail || 'Unknown error'));
+        }
+    };
+    // MFA setup handler
+    document.getElementById('setup-mfa-btn').onclick = async () => {
+        const mfaArea = document.getElementById('mfa-setup-area');
+        mfaArea.innerHTML = 'Generating MFA secret...';
+        try {
+            const mfaUser = await setupMFA();
+            mfaArea.innerHTML = `<div>Scan this secret in your authenticator app: <b>${mfaUser.mfa_secret}</b></div>
+            <input type='text' id='mfa-code' placeholder='Enter TOTP code'>
+            <button id='verify-mfa-btn'>Verify</button>`;
+            document.getElementById('verify-mfa-btn').onclick = async () => {
+                const code = document.getElementById('mfa-code').value;
+                const ok = await verifyMFA(code);
+                if (ok) {
+                    showAlert('MFA enabled!', 'success');
+                    renderDashboard();
+                } else {
+                    showAlert('Invalid code. Try again.');
+                }
+            };
+        } catch (error) {
+            showAlert('Failed to setup MFA: ' + (error.response?.data?.detail || 'Unknown error'));
+        }
+    };
     // Add asset form handler
     document.getElementById('add-asset-form').onsubmit = async (e) => {
         e.preventDefault();
