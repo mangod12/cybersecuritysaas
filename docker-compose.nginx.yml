@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:1.25
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/letsencrypt:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - app
+
+  # ...existing app/db/redis services here...
+
+# To use Let's Encrypt, run certbot on the host or in a separate container to populate ./certs
+# Example: docker run -it --rm -v $(pwd)/certs:/etc/letsencrypt certbot/certbot certonly --standalone -d yourdomain.com

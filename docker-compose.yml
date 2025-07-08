@@ -3,68 +3,46 @@ version: '3.8'
 services:
   app:
     build: .
+    command: ["/start-app.sh"]
     ports:
-      - "8000:8000"
+      - "8000:8000"  # Railway will map this to a public URL
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - ASYNC_DATABASE_URL=${ASYNC_DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - ENVIRONMENT=${ENVIRONMENT}
+      # Add any other required env vars here
     depends_on:
       - db
       - redis
-    env_file:
-      - .env
-    environment:
-      # Use strong, unique credentials in .env for production
-      - DATABASE_URL=postgresql+psycopg2://cybersec_user:${POSTGRES_PASSWORD}@db:5432/cybersec_db
-      - ASYNC_DATABASE_URL=postgresql+asyncpg://cybersec_user:${POSTGRES_PASSWORD}@db:5432/cybersec_db
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-    volumes:
-      - .:/app  # For development only. Remove or replace with COPY in production.
-    deploy:
-      resources:
-        limits:
-          cpus: '1.00'
-          memory: 512M
+
   db:
     image: postgres:15
     restart: always
     environment:
       POSTGRES_USER: cybersec_user
-      # Use a strong password in your .env file, do not commit secrets
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: cybersec_db
-    # Comment out the next two lines for production to avoid exposing the DB
-    # ports:
-    #   - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cybersec_user"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
+
   redis:
     image: redis:7
     restart: always
-    # Comment out the next two lines for production to avoid exposing Redis
-    # ports:
-    #   - "6379:6379"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
+    # No ports exposed; internal only
+
 volumes:
   pgdata:
 
-# SECURITY NOTES:
-# - Set POSTGRES_PASSWORD, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, and GITHUB_REDIRECT_URI in a .env file (not committed to source control)
-# - For production, use Docker secrets or a secrets manager for sensitive values
-# - Do not expose database ports to the public network
-# - Use non-root users in your Dockerfiles for backend/frontend
-# - Regularly update images to patch vulnerabilities.
-# - Remove source code mounting and exposed ports in production.
-# - Use firewalls to restrict access to exposed ports during development.
+# Notes for Railway:
+# - Do NOT include nginx in this file; Railway provides HTTPS and routing.
+# - Only expose port 8000 on the app service.
+# - Use Railway's Variables tab to set all secrets and env vars.
+# - For production, use Railway's managed Postgres/Redis if possible (update DATABASE_URL/REDIS_URL accordingly).

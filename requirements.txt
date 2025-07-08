@@ -1,6 +1,6 @@
 # requirements.txt
 #
-# Python package requirements for OneAlert.
+# Python package requirements for CyberSec Alert SaaS.
 #
 # - Lists all dependencies needed for development, testing, and production.
 # - Pin versions for reproducibility and compatibility.
@@ -55,13 +55,3 @@ isort==5.13.2
 
 # Added asyncpg
 asyncpg
-
-# Celery and Redis for task queues
-celery==5.4.0
-redis==5.0.4
-
-# Rate limiting
-slowapi==0.1.8
-
-# Multi-factor authentication
-pyotp==2.9.0

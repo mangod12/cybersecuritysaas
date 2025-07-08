@@ -68,7 +68,7 @@ class Settings(BaseSettings):
 
     # Application Core Configuration
     # Name of the application.
-    app_name: str = "OneAlert"
+    app_name: str = "CyberSec Alert SaaS"
     
     # Current version of the application.
     app_version: str = "1.0.0"
@@ -78,7 +78,7 @@ class Settings(BaseSettings):
     
     # List of allowed origins for CORS (Cross-Origin Resource Sharing).
     # Important for frontend applications running on different domains/ports.
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:8000", "http://localhost:8000"]
+    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:8000", "http://localhost:8000", "http://localhost:8001"]
     
     # Scheduler Configuration
     # Interval in hours for the vulnerability scraper to run.
@@ -98,20 +98,8 @@ class Settings(BaseSettings):
     # GitHub OAuth App Client Secret
     github_client_secret: Optional[str] = None
     
-    # GitHub OAuth redirect URI (port 8000 for local)
+    # GitHub OAuth redirect URI (port 8000 for local, 8001 for Docker)
     github_redirect_uri: str = "http://localhost:8000/api/v1/auth/github/callback"
-
-    # --- Added for .env compatibility and full integration ---
-    POSTGRES_PASSWORD: Optional[str] = None
-    SLACK_WEBHOOK_URL: Optional[str] = None
-    TEAMS_WEBHOOK_URL: Optional[str] = None
-    GENERIC_WEBHOOK_URL: Optional[str] = None
-    SIEM_HEC_URL: Optional[str] = None
-    SIEM_HEC_TOKEN: Optional[str] = None
-    # If you use POSTGRES_USER and POSTGRES_DB in your docker-compose, add them here too:
-    POSTGRES_USER: Optional[str] = None
-    POSTGRES_DB: Optional[str] = None
-    # ------------------------------------------------------------
 
     # Pydantic Model Configuration
     # Tells Pydantic how to load and manage settings.
