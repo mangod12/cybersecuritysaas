@@ -26,7 +26,8 @@ ehthumbs.db
 Thumbs.db
 
 # Secrets and credentials
-
+# Ignore local environment files containing secrets
+.env
 secrets.json
 credentials.json
 
