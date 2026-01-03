@@ -149,6 +149,8 @@ CyberSec Alert SaaS is a **comprehensive vulnerability intelligence and alerting
 - **isort** - Import sorting
 - **python-dotenv** - Environment variable management
 
+---
+
 ## ✨ Key Features
 
 ### 🔐 Authentication & Authorization
