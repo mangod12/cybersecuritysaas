@@ -94,6 +94,17 @@ async def health_check():
     }
 
 
+@app.get("/")
+async def root():
+    """Root endpoint with API information."""
+    return {
+        "message": "CyberSec Alert SaaS API",
+        "version": settings.app_version,
+        "docs": "/docs",
+        "health": "/health"
+    }
+
+
 # Serve static files from frontend directory
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 frontend_dir = os.path.join(project_root, "frontend")
@@ -103,7 +114,3 @@ if os.path.isdir(frontend_dir):
     logger.info(f"Serving frontend from {frontend_dir}")
 else:
     logger.warning(f"Frontend directory not found at {frontend_dir}")
-    # Fallback root endpoint if frontend is missing
-    @app.get("/")
-    async def root():
-        return {"message": "Frontend not found", "docs": "/docs", "health": "/health"}

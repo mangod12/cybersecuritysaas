@@ -271,8 +271,6 @@ class AlertChecker:
                 description=cve.get('description', ''),
                 severity=cve.get('severity', 'unknown'),
                 cvss_score=cve.get('cvss_score'),
-                exploitability=cve.get('exploitability'),
-                remediation=cve.get('remediation'),
                 source_url=cve.get('source_url'),
                 status=AlertStatus.PENDING
             )
