@@ -2,6 +2,8 @@
 
 # CyberSec Alert SaaS
 
+[![CI](https://github.com/mangod12/cybersecuritysaas/actions/workflows/ci.yml/badge.svg)](https://github.com/mangod12/cybersecuritysaas/actions/workflows/ci.yml)
+
 Production-deployed vulnerability intelligence platform that aggregates CVEs from multiple authoritative sources and automatically correlates them with enterprise assets to generate real-time prioritized alerts.
 
 🚀 **Live Demo:**

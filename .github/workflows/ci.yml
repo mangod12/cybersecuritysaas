@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'backend/**'
+      - 'tests/**'
+      - 'requirements.txt'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'docker-compose.nginx.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'backend/**'
+      - 'tests/**'
+      - 'requirements.txt'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'docker-compose.nginx.yml'
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            backend/requirements.txt
+
+      - name: Detect project paths
+        id: project
+        run: |
+          if [ -f requirements.txt ]; then
+            echo "requirements=requirements.txt" >> "$GITHUB_OUTPUT"
+            echo "source_dir=." >> "$GITHUB_OUTPUT"
+          elif [ -f backend/requirements.txt ]; then
+            echo "requirements=backend/requirements.txt" >> "$GITHUB_OUTPUT"
+            echo "source_dir=backend" >> "$GITHUB_OUTPUT"
+          else
+            echo "No requirements.txt found at repository root or backend/." >&2
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r "${{ steps.project.outputs.requirements }}"
+          pip install pytest flake8
+
+      - name: Run flake8
+        run: |
+          flake8 "${{ steps.project.outputs.source_dir }}"
+
+      - name: Run pytest (verbose)
+        env:
+          PYTHONPATH: ${{ steps.project.outputs.source_dir }}
+        run: |
+          pytest -v
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: cybersecuritysaas:ci
