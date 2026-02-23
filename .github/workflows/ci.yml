@@ -39,6 +39,9 @@ jobs:
       - name: Compile backend
         run: python -m compileall backend/
 
+      - name: Add backend to PYTHONPATH
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
+
       - name: Run tests
         if: hashFiles('tests/**/*.py') != ''
         env:
