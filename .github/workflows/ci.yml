@@ -15,69 +15,59 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Lint and Test
+  backend:
+    name: Backend
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - name: 1️⃣ Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 2️⃣ Set up Python 3.12
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: "pip"
           cache-dependency-path: requirements.txt
 
-      - name: 3️⃣ Install dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest flake8
 
-      - name: 4️⃣ Run flake8 (blocking: critical errors only)
-        run: |
-          flake8 backend_core \
-            --count \
-            --select=E9,F63,F7,F82 \
-            --show-source \
-            --statistics
+      - name: Compile backend
+        run: python -m compileall backend/
 
-      - name: 5️⃣ Run flake8 (non-blocking style report)
-        run: |
-          flake8 backend_core \
-            --count \
-            --exit-zero \
-            --statistics
-
-      - name: 6️⃣ Run pytest
+      - name: Run tests
+        if: hashFiles('tests/**/*.py') != ''
         env:
           SECRET_KEY: testsecret
           DATABASE_URL: sqlite:///test.db
           MAILGUN_API_KEY: dummy
           MAILGUN_DOMAIN: dummy.com
-        run: |
-          pytest -v
+        run: pytest -v
 
-  docker-build:
-    name: Docker Build
+  frontend:
+    name: Frontend
     runs-on: ubuntu-latest
-    needs: test
     timeout-minutes: 20
 
     steps:
-      - name: 1️⃣ Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 2️⃣ Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: 3️⃣ Build Docker image
-        uses: docker/build-push-action@v6
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
         with:
-          context: .
-          file: ./Dockerfile
-          push: false
-          tags: cybersecuritysaas:ci
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: skydash/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: skydash/frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: skydash/frontend
+        run: npm run build

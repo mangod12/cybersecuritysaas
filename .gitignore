@@ -35,6 +35,9 @@ credentials.json
 logs/
 *.log
 
+# Node
+node_modules/
+
 # Build artifacts
 dist/
 build/
