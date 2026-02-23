@@ -28,15 +28,17 @@ async def lifespan(app: FastAPI):
     logger.info("Starting CyberSec Alert SaaS...")
     
     # Start scheduler
-    scheduler.start()
-    logger.info("Scheduler started")
+    if not os.getenv("DISABLE_SCHEDULER"):
+        scheduler.start()
+        logger.info("Scheduler started")
     
     yield
     
     # Shutdown
     logger.info("Shutting down...")
-    scheduler.shutdown()
-    logger.info("Scheduler stopped")
+    if not os.getenv("DISABLE_SCHEDULER"):
+        scheduler.shutdown()
+        logger.info("Scheduler stopped")
 
 
 # Create FastAPI application
@@ -94,16 +96,24 @@ async def health_check():
     }
 
 
+# Root endpoint - always returns JSON
+@app.get("/")
+async def root():
+    """Root endpoint."""
+    return {
+        "message": "CyberSec Alert API",
+        "version": settings.app_version,
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
 # Serve static files from frontend directory
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 frontend_dir = os.path.join(project_root, "frontend")
 
 if os.path.isdir(frontend_dir):
-    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+    app.mount("/app", StaticFiles(directory=frontend_dir, html=True), name="frontend")
     logger.info(f"Serving frontend from {frontend_dir}")
 else:
     logger.warning(f"Frontend directory not found at {frontend_dir}")
-    # Fallback root endpoint if frontend is missing
-    @app.get("/")
-    async def root():
-        return {"message": "Frontend not found", "docs": "/docs", "health": "/health"}

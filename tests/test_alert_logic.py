@@ -177,11 +177,13 @@ class TestAlertChecker:
     @pytest.mark.asyncio
     @patch('backend.services.alert_checker.AsyncSessionLocal')
     @patch('backend.services.alert_checker.email_service')
-    async def test_create_alert_from_cve(self, mock_email_service, mock_session_local,
+    @patch('backend.services.alert_checker.cve_enrichment_service.enrich_cve', new_callable=AsyncMock)
+    async def test_create_alert_from_cve(self, mock_enrich, mock_email_service, mock_session_local,
                                         alert_checker, mock_user, mock_asset):
         """Test creating an alert from CVE data."""
         mock_db = AsyncMock()
         mock_session_local.return_value.__aenter__.return_value = mock_db
+        mock_enrich.return_value = {}
 
         # Mock the result of db.execute() to be a synchronous-like mock
         mock_execution_result = MagicMock()

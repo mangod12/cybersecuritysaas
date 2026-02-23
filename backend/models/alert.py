@@ -48,6 +48,8 @@ class Alert(Base):
     description = Column(Text, nullable=True)
     severity = Column(String, nullable=False)
     cvss_score = Column(Float, nullable=True)
+    exploitability = Column(Float, nullable=True)
+    remediation = Column(Text, nullable=True)
     status = Column(String, default=AlertStatus.PENDING)
     sent_at = Column(DateTime(timezone=True), nullable=True)
     acknowledged_at = Column(DateTime(timezone=True), nullable=True)
