@@ -230,9 +230,9 @@ class TestVendorScraper:
         mock_cisco.return_value = [{"vendor": "Cisco", "id": "cisco-1"}]
         mock_forti.return_value = [{"vendor": "Fortinet", "id": "forti-1"}]
         mock_ms.return_value = [{"vendor": "Microsoft", "id": "ms-1"}]
-        
+
         all_advisories = await scraper.fetch_all_vendor_advisories(7)
-        
+
         assert len(all_advisories) == 3
         vendors = [adv["vendor"] for adv in all_advisories]
         assert "Cisco" in vendors
@@ -245,11 +245,11 @@ class TestVendorScraper:
         """Test handling errors when fetching from vendors."""
         # Mock one vendor failing
         mock_cisco.side_effect = Exception("Network error")
-        
+
         with patch.object(scraper, 'fetch_fortinet_advisories', return_value=[]):
             with patch.object(scraper, 'fetch_microsoft_advisories', return_value=[]):
                 advisories = await scraper.fetch_all_vendor_advisories(7)
-                
+
                 # Should return empty list but not crash
                 assert advisories == []
 
@@ -259,11 +259,11 @@ async def test_scraper_integration():
     """Integration test for scraper services."""
     cve_scraper = CVEScraper()
     vendor_scraper = VendorScraper()
-    
+
     # Test that scrapers can be instantiated without errors
     assert cve_scraper is not None
     assert vendor_scraper is not None
-    
+
     # Test that methods exist and are callable
     assert callable(cve_scraper.fetch_recent_cves)
     assert callable(vendor_scraper.fetch_all_vendor_advisories)
