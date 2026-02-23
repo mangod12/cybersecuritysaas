@@ -21,14 +21,14 @@ psycopg2-binary
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt<=4.0.1
-python-multipart==0.0.9
+python-multipart==0.0.22
 
 # HTTP client for API calls
 httpx==0.27.0
-aiohttp==3.9.5
+aiohttp==3.13.3
 
 # Email
-requests==2.32.3  # For Mailgun API and GitHub OAuth
+requests==2.32.4  # For Mailgun API and GitHub OAuth
 
 # Environment and configuration
 python-dotenv==1.0.1
