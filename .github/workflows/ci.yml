@@ -79,12 +79,9 @@ jobs:
             --show-source \
             --statistics
 
-      - name: Run flake8 (non-blocking: style report)
-        run: |
-          flake8 "${{ steps.project.outputs.source_dir }}" \
-            --count \
-            --exit-zero \
-            --statistics
+      - name: Run flake8 (non-blocking)
+  run: |
+    flake8 backend_core --count --exit-zero --statistics
 
       - name: Run pytest (verbose)
         env:
