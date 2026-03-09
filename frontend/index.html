@@ -7,99 +7,155 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(120deg, #f8f9fa 0%, #e0e7ff 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a3e 50%, #0f1a2e 100%);
             min-height: 100vh;
             margin: 0;
+            color: #e0e0e0;
         }
+        
         .centered {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            padding: 20px;
         }
+        
         .card {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 24px rgba(102,126,234,0.10);
-            padding: 2.5rem 2rem 2rem 2rem;
-            min-width: 340px;
+            background: rgba(20, 20, 40, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            padding: 3rem 2.5rem;
+            min-width: 360px;
             max-width: 95vw;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         .logo {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
         }
+        
         .logo-icon {
-            font-size: 3rem;
-            color: #667eea;
-            margin-bottom: 0.5rem;
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            display: block;
         }
+        
         .logo-text {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #333;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
         }
+        
         .logo-subtitle {
-            font-size: 0.9rem;
-            color: #666;
+            font-size: 0.95rem;
+            color: #a0a0c0;
             font-weight: 400;
         }
+        
         .input-group {
-            margin-bottom: 1.2rem;
+            margin-bottom: 1.3rem;
         }
+        
         input[type="email"], input[type="password"], input[type="text"], select {
             width: 100%;
-            padding: 0.8rem 1rem;
-            border: 1.5px solid #e0e7ff;
-            border-radius: 8px;
+            padding: 0.95rem 1.2rem;
+            border: 1.5px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
             font-size: 1rem;
-            background: #f8faff;
+            background: rgba(255, 255, 255, 0.05);
             margin-bottom: 0.2rem;
-            box-sizing: border-box;
+            color: #e0e0e0;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
+        
+        input::placeholder, select { color: #727294; }
+        
         input:focus, select:focus {
             outline: none;
             border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
         }
+        
         button, .btn {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 0.75rem 1.7rem;
+            padding: 0.95rem 1.8rem;
             border: none;
-            border-radius: 6px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 1rem;
-            font-weight: 500;
+            font-weight: 600;
             margin-top: 0.5rem;
             margin-bottom: 0.5rem;
             width: 100%;
             box-sizing: border-box;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.95rem;
         }
+        
         button:hover, .btn:hover {
-            background: linear-gradient(90deg, #5a6fd8 0%, #6d3fa2 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #5a6fd8 0%, #6d3fa2 100%);
         }
+        
+        button:active, .btn:active {
+            transform: translateY(0);
+        }
+        
         .github-btn {
-            background: #24292e;
+            background: rgba(36, 41, 46, 0.6);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            gap: 0.8rem;
             margin-top: 1rem;
             margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        
         .github-btn:hover {
-            background: #1a1e22;
+            background: rgba(36, 41, 46, 0.9);
+            border-color: rgba(255, 255, 255, 0.2);
         }
+        
         .divider {
             text-align: center;
-            margin: 1rem 0;
+            margin: 1.5rem 0;
             position: relative;
         }
+        
         .divider::before {
             content: '';
             position: absolute;
@@ -107,186 +163,412 @@
             left: 0;
             right: 0;
             height: 1px;
-            background: #e0e7ff;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
         }
+        
         .divider span {
-            background: white;
+            background: rgba(20, 20, 40, 0.8);
             padding: 0 1rem;
-            color: #666;
+            color: #a0a0c0;
             font-size: 0.9rem;
+            position: relative;
         }
+        
         .logout-btn {
             position: absolute;
             top: 24px;
             right: 32px;
-            background: #dc3545;
+            background: rgba(220, 53, 69, 0.8);
             color: #fff;
-            border-radius: 6px;
-            padding: 0.5rem 1.2rem;
-            font-weight: 500;
-            font-size: 1rem;
-            border: none;
+            border-radius: 10px;
+            padding: 0.6rem 1.4rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid rgba(220, 53, 69, 0.3);
             cursor: pointer;
             width: auto;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
+        
         .logout-btn:hover {
-            background: #b52a37;
+            background: rgba(220, 53, 69, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(220, 53, 69, 0.3);
         }
+        
         .dashboard-container {
-            max-width: 1100px;
+            max-width: 1300px;
             margin: 40px auto;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 6px 32px rgba(102,126,234,0.12);
-            padding: 2.5rem 2rem 2rem 2rem;
+            background: rgba(20, 20, 40, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            padding: 3rem;
             position: relative;
+            animation: fadeIn 0.6s ease;
         }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
         .dashboard-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
         }
-        .alert {
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            font-weight: 500;
-            background: #f8d7da;
-            color: #721c24;
-            border: 1.5px solid #f5c6cb;
-        }
-        .success {
-            background: #d4edda;
-            color: #155724;
-            border: 1.5px solid #c3e6cb;
-        }
-        .stats {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-        .stat-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1.2rem 2rem;
-            text-align: center;
-            flex: 1;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.08);
-        }
-        .stat-title {
-            font-size: 1.1rem;
-            color: #667eea;
-            margin-bottom: 0.3rem;
-        }
-        .stat-value {
+        
+        .dashboard-header h2 {
+            margin: 0;
             font-size: 2rem;
-            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
+        
+        .dashboard-header > div:last-child {
+            text-align: right;
+            color: #a0a0c0;
+            font-size: 0.95rem;
+        }
+        
+        .alert {
+            padding: 1.2rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            background: rgba(200, 50, 50, 0.15);
+            color: #ff6b6b;
+            border: 1px solid rgba(200, 50, 50, 0.2);
+            backdrop-filter: blur(10px);
+            animation: slideDown 0.4s ease;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .alert.success {
+            background: rgba(50, 200, 50, 0.15);
+            color: #51cf66;
+            border-color: rgba(50, 200, 50, 0.2);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .stat-card {
+            background: rgba(102, 126, 234, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 16px;
+            padding: 1.8rem;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .stat-card:hover {
+            border-color: rgba(102, 126, 234, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.2);
+            background: rgba(102, 126, 234, 0.12);
+        }
+        
+        .stat-title {
+            font-size: 1rem;
+            color: #a0a0c0;
+            margin-bottom: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
         .section {
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
         }
+        
         .section h3 {
-            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            color: #e0e0e0;
+            margin: 0 0 1.5rem 0;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
         }
+        
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(102, 126, 234, 0.1);
         }
+        
         th, td {
-            padding: 0.7rem 0.5rem;
-            border-bottom: 1px solid #e0e7ff;
+            padding: 1.2rem;
             text-align: left;
+            color: #e0e0e0;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.08);
         }
+        
         th {
-            background: #f8f9fa;
-            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            color: #a0a0c0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
         }
+        
+        tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
         .btn-small {
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-            margin: 0.2rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            margin: 0.3rem;
             width: auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-weight: 600;
         }
+        
+        .btn-small:hover {
+            transform: scale(1.05);
+        }
+        
         .loading {
             text-align: center;
-            padding: 2rem;
+            padding: 3rem;
             color: #667eea;
+            font-size: 1.1rem;
+            animation: pulse 2s infinite;
         }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
         .tabs {
             display: flex;
             gap: 1rem;
-            border-bottom: 2px solid #e0e7ff;
-            margin-bottom: 2rem;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+            margin-bottom: 2.5rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
         }
+        
         .tab-btn {
             background: none;
             border: none;
-            padding: 1rem;
+            padding: 0.8rem 1.2rem;
             cursor: pointer;
-            font-size: 1rem;
-            color: #667eea;
+            font-size: 0.95rem;
+            color: #a0a0c0;
             border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-            font-weight: 500;
+            margin-bottom: -1rem;
+            font-weight: 600;
             width: auto;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
         }
+        
+        .tab-btn:hover {
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+        
         .tab-btn.active {
             border-bottom-color: #667eea;
+            color: #667eea;
         }
+        
         .tab-content {
             display: none;
+            animation: fadeIn 0.4s ease;
         }
+        
         .tab-content.active {
             display: block;
         }
+        
         .network-zone-label {
             display: inline-block;
-            padding: 0.3rem 0.6rem;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            font-weight: 500;
+            padding: 0.5rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
         }
-        .zone-field { background: #fff3cd; color: #856404; }
-        .zone-control { background: #cfe2ff; color: #084298; }
-        .zone-supervisory { background: #d1ecf1; color: #0c5460; }
-        .zone-safety { background: #f8d7da; color: #721c24; }
-        .risk-low { color: #28a745; font-weight: bold; }
+        
+        .zone-field { background: rgba(255, 193, 7, 0.15); color: #ffc107; }
+        .zone-control { background: rgba(66, 165, 245, 0.15); color: #42a5f5; }
+        .zone-supervisory { background: rgba(102, 187, 106, 0.15); color: #66bb6a; }
+        .zone-safety { background: rgba(239, 83, 80, 0.15); color: #ef5350; }
+        
+        .risk-low { color: #66bb6a; font-weight: bold; }
         .risk-medium { color: #ffc107; font-weight: bold; }
-        .risk-high { color: #dc3545; font-weight: bold; }
+        .risk-high { color: #ef5350; font-weight: bold; }
+        
         .device-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+        
         .device-card {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 1.2rem;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 14px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
             border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
-        .device-card.risk-high { border-left-color: #dc3545; }
+        
+        .device-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(102, 126, 234, 0.4);
+            box-shadow: 0 12px 36px rgba(102, 126, 234, 0.2);
+        }
+        
+        .device-card.risk-high { border-left-color: #ef5350; }
         .device-card.risk-medium { border-left-color: #ffc107; }
+        .device-card.risk-low { border-left-color: #66bb6a; }
+        
         .device-card-title {
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: #e0e0e0;
+            word-break: break-word;
         }
+        
         .device-card-detail {
             font-size: 0.9rem;
-            color: #666;
-            margin: 0.3rem 0;
+            color: #a0a0c0;
+            margin: 0.6rem 0;
+            line-height: 1.5;
         }
-        @media (max-width: 700px) {
-            .dashboard-header { flex-direction: column; gap: 1rem; }
-            .stats { flex-direction: column; gap: 1rem; }
-            .dashboard-container { padding: 1rem; }
-            .card { min-width: unset; }
-            .tabs { flex-wrap: wrap; }
-            .device-grid { grid-template-columns: 1fr; }
+        
+        .device-card-detail b {
+            color: #e0e0e0;
+            font-weight: 600;
+        }
+        
+        form {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: end;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+        }
+        
+        form input, form select {
+            min-width: 140px;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        form button {
+            flex-shrink: 0;
+            min-width: 120px;
+            margin: 0 !important;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container { 
+                padding: 1.5rem; 
+                margin: 20px;
+            }
+            
+            .dashboard-header { 
+                flex-direction: column; 
+                gap: 1rem; 
+                align-items: flex-start;
+            }
+            
+            .dashboard-header > div:last-child {
+                text-align: left;
+            }
+            
+            .stats { 
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs { 
+                gap: 0.5rem; 
+            }
+            
+            .tab-btn {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.75rem;
+            }
+            
+            .device-grid { 
+                grid-template-columns: 1fr;
+            }
+            
+            .card {
+                min-width: unset;
+                padding: 2rem 1.5rem;
+            }
+            
+            form {
+                flex-direction: column;
+            }
+            
+            form input, form select, form button {
+                width: 100%;
+            }
+            
+            table {
+                font-size: 0.85rem;
+            }
+            
+            th, td {
+                padding: 0.8rem;
+            }
         }
     </style>
 </head>
@@ -317,8 +599,8 @@ function renderLogin(showRegister = false) {
           <div class="logo-subtitle">Enterprise Security Monitoring</div>
         </div>
         <div id="login-register-toggle" style="text-align:center; margin-bottom:1rem;">
-          <button id="show-login-btn" style="width:auto;${showRegister ? '' : ' background:#667eea;'}">Login</button>
-          <button id="show-register-btn" style="width:auto;${showRegister ? ' background:#667eea;' : ''}">Register</button>
+          <button id="show-login-btn" style="width:auto; margin-right:0.5rem; ${showRegister ? 'background: rgba(102, 126, 234, 0.3); border: 1px solid rgba(102, 126, 234, 0.3);' : 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);'}">Login</button>
+          <button id="show-register-btn" style="width:auto; margin-left:0.5rem; ${showRegister ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);' : 'background: rgba(102, 126, 234, 0.3); border: 1px solid rgba(102, 126, 234, 0.3);'}">Register</button>
         </div>
         <form id="login-form" style="display:${showRegister ? 'none' : 'block'};">
           <div class="input-group">
@@ -672,10 +954,10 @@ async function renderDashboard(editAssetId = null, editAlertId = null, createAle
       <div class="dashboard-header">
         <div>
           <h2>Welcome, ${user.full_name || user.email}</h2>
-          <div style="color:#667eea; font-size:1rem;">${user.company || ''}</div>
+          <div style="color: #a0a0c0; font-size:1rem;">${user.company || ''}</div>
         </div>
         <div style="text-align:right;">
-          <div><b>Email:</b> ${user.email}</div>
+          <div><b style="color: #e0e0e0;">Email:</b> <span style="color: #a0a0c0;">${user.email}</span></div>
         </div>
       </div>
       
@@ -722,7 +1004,7 @@ async function renderDashboard(editAssetId = null, editAlertId = null, createAle
           <table><thead><tr><th>Title</th><th>Severity</th><th>Asset</th><th>CVE</th><th>CVSS</th><th>Exploitability</th><th>Remediation</th><th>Status</th><th>Action</th></tr></thead><tbody>
           ${alerts.map(al => `
             <tr><td>${al.title}</td><td>${al.severity}</td><td>${al.asset_name||''}</td><td>${al.cve_id||''}</td><td>${al.cvss_score||''}</td><td>${al.exploitability||''}</td><td>${al.remediation?`<a href='${al.remediation}' target='_blank'>Link</a>`:''}</td><td>${al.status}</td><td>
-              <button class='btn btn-small' style='background:#28a745' onclick='ackAlert(${al.id})'>Acknowledge</button>
+              <button class='btn btn-small' style='background:linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);' onclick='ackAlert(${al.id})'>Acknowledge</button>
             </td></tr>
           `).join('') || '<tr><td colspan="9">No alerts found.</td></tr>'}
           </tbody></table>
@@ -757,8 +1039,8 @@ async function renderDashboard(editAssetId = null, editAlertId = null, createAle
             </td></tr>
           ` : `
             <tr><td>${asset.name}</td><td>${asset.asset_type}</td><td>${asset.vendor||''}</td><td>${asset.product||''}</td><td>${asset.version||''}</td><td>${asset.description||''}</td><td>
-              <button class='btn btn-small' style='background:#ffc107;color:#333;' onclick='editAsset(${asset.id})'>Edit</button>
-              <button class='btn btn-small' style='background:#dc3545;' onclick='deleteAsset(${asset.id})'>Delete</button>
+              <button class='btn btn-small' style='background:linear-gradient(135deg, #ffc107 0%, #ffb300 100%);color:#000;' onclick='editAsset(${asset.id})'>Edit</button>
+              <button class='btn btn-small' style='background:linear-gradient(135deg, #ef5350 0%, #e53935 100%);' onclick='deleteAsset(${asset.id})'>Delete</button>
             </td></tr>
           `).join('') || '<tr><td colspan="7">No assets found.</td></tr>'}
           </tbody></table>
@@ -796,7 +1078,7 @@ async function renderDashboard(editAssetId = null, editAlertId = null, createAle
           </div>
           <div class="stat-card">
             <div class="stat-title">High-Risk Devices</div>
-            <div class="stat-value" style="color:#dc3545;">${otSummary.high_risk_devices || 0}</div>
+            <div class="stat-value" style="color:#ef5350;">${otSummary.high_risk_devices || 0}</div>
           </div>
           <div class="stat-card">
             <div class="stat-title">Uncorrelated</div>
@@ -832,7 +1114,7 @@ async function renderDashboard(editAssetId = null, editAlertId = null, createAle
               <td>${s.enabled ? '<span style="color:green">✓ Active</span>' : '<span style="color:red">✗ Inactive</span>'}</td>
               <td>${s.last_heartbeat ? new Date(s.last_heartbeat).toLocaleString() : 'Never'}</td>
               <td>${s.last_discovery_count || 0}</td>
-              <td><button class='btn btn-small' style='background:#dc3545;' onclick='deleteSensor(${s.id})'>Delete</button></td>
+              <td><button class='btn btn-small' style='background:linear-gradient(135deg, #ef5350 0%, #e53935 100%);' onclick='deleteSensor(${s.id})'>Delete</button></td>
             </tr>
           `).join('') || '<tr><td colspan="8">No sensors registered. Add one above.</td></tr>'}
           </tbody></table>
@@ -917,8 +1199,8 @@ async function renderDashboard(editAssetId = null, editAlertId = null, createAle
           <table><thead><tr><th>Name</th><th>Type</th><th>Vendor</th><th>Product</th><th>Version</th><th>Description</th><th>Action</th></tr></thead><tbody>
           ${assets.map(asset => `
             <tr><td>${asset.name}</td><td>${asset.asset_type}</td><td>${asset.vendor||''}</td><td>${asset.product||''}</td><td>${asset.version||''}</td><td>${asset.description||''}</td><td>
-              <button class='btn btn-small' style='background:#ffc107;color:#333;' onclick='editAsset(${asset.id})'>Edit</button>
-              <button class='btn btn-small' style='background:#dc3545;' onclick='deleteAsset(${asset.id})'>Delete</button>
+              <button class='btn btn-small' style='background:linear-gradient(135deg, #ffc107 0%, #ffb300 100%);color:#000;' onclick='editAsset(${asset.id})'>Edit</button>
+              <button class='btn btn-small' style='background:linear-gradient(135deg, #ef5350 0%, #e53935 100%);' onclick='deleteAsset(${asset.id})'>Delete</button>
             </td></tr>
           `).join('') || '<tr><td colspan="7">No assets found.</td></tr>'}
           </tbody></table>
@@ -932,7 +1214,7 @@ async function renderDashboard(editAssetId = null, editAlertId = null, createAle
           <table><thead><tr><th>Title</th><th>Severity</th><th>Asset</th><th>CVE</th><th>CVSS</th><th>Status</th><th>Action</th></tr></thead><tbody>
           ${alerts.map(al => `
             <tr><td>${al.title}</td><td>${al.severity}</td><td>${al.asset_name||''}</td><td>${al.cve_id||''}</td><td>${al.cvss_score||''}</td><td>${al.status}</td><td>
-              <button class='btn btn-small' style='background:#28a745' onclick='ackAlert(${al.id})'>Acknowledge</button>
+              <button class='btn btn-small' style='background:linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);' onclick='ackAlert(${al.id})'>Acknowledge</button>
             </td></tr>
           `).join('') || '<tr><td colspan="7">No alerts found.</td></tr>'}
           </tbody></table>
