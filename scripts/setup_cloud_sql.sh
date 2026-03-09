@@ -36,8 +36,6 @@ gcloud sql instances create "$DB_INSTANCE" \
     --region="$DB_REGION" \
     --availability-type=regional \
     --backup-start-time=03:00 \
-    --enable-bin-log \
-    --database-flags=cloudsql_iam_authentication=on \
     || echo "   (Instance may already exist)"
 
 echo "   ✓ Cloud SQL instance created/verified"
