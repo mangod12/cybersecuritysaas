@@ -120,15 +120,26 @@ class Settings(BaseSettings):
         """
         # Check if async_database_url needs to be generated
         if self.database_url and not self.async_database_url:
-            if self.database_url.startswith("sqlite:///"):
+            normalized_url = self.database_url.strip()
+
+            if normalized_url.startswith("sqlite:///"):
                 # For SQLite, replace "sqlite:///" with "sqlite+aiosqlite:///
                 # This uses the aiosqlite driver for async operations.
                 # Handles relative paths like "sqlite:///./file.db" correctly.
-                self.async_database_url = "sqlite+aiosqlite:///" + self.database_url[len("sqlite:///"):]
-            elif self.database_url.startswith("postgresql://"):
+                self.async_database_url = "sqlite+aiosqlite:///" + normalized_url[len("sqlite:///"):]
+            elif normalized_url.startswith("postgresql+asyncpg://"):
+                # URL is already configured for async PostgreSQL.
+                self.async_database_url = normalized_url
+            elif normalized_url.startswith("postgresql+psycopg2://"):
+                # Convert SQLAlchemy sync Postgres URL to asyncpg URL.
+                self.async_database_url = normalized_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
+            elif normalized_url.startswith("postgresql://"):
                 # For PostgreSQL, replace "postgresql://" with "postgresql+asyncpg://"
                 # This uses the asyncpg driver for async operations.
-                self.async_database_url = self.database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+                self.async_database_url = normalized_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            elif normalized_url.startswith("postgres://"):
+                # Common shorthand used by managed platforms.
+                self.async_database_url = normalized_url.replace("postgres://", "postgresql+asyncpg://", 1)
             # Add similar conversions for other database types (e.g., MySQL) if needed.
             # else:
             #     logger.warning(f"Unsupported database_url for async conversion: {self.database_url}")
