@@ -393,15 +393,11 @@ class TestHealthAndRoot:
         assert "version" in data
     
     def test_root_endpoint(self, client):
-        """Test root endpoint."""
-        response = client.get("/")
+        """Test root endpoint redirects to frontend."""
+        response = client.get("/", follow_redirects=False)
         
-        assert response.status_code == 200
-        data = response.json()
-        assert "message" in data
-        assert "version" in data
-        assert "docs" in data
-        assert "health" in data
+        assert response.status_code == 307  # Redirect
+        assert response.headers["location"] == "/app/"
 
 
 @pytest.mark.asyncio
