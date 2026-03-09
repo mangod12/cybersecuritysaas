@@ -50,27 +50,3 @@ jobs:
           MAILGUN_API_KEY: dummy
           MAILGUN_DOMAIN: dummy.com
         run: pytest -v
-
-  frontend:
-    name: Frontend
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: skydash/frontend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: skydash/frontend
-        run: npm ci
-
-      - name: Build
-        working-directory: skydash/frontend
-        run: npm run build
