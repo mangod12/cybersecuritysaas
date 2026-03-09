@@ -9,17 +9,11 @@ Production-deployed vulnerability intelligence platform that aggregates CVEs fro
 🚀 **Live Demo:**
 [https://cybersec-saas-zjfau6dqcq-uc.a.run.app/](https://cybersec-saas-zjfau6dqcq-uc.a.run.app/)
 
-🧪 **Demo Credentials:**
-Email: `admin@example.com`
-Password: `password123`
+🧪 **Demo Login:**
+- Email: `admin@example.com` / Password: `password123`
+- Or use **GitHub OAuth** login
 
-⚠️ **Important:** Demo requires PostgreSQL database. To set up on Cloud Run:
-1. Create a Cloud SQL PostgreSQL instance
-2. Set `DATABASE_URL` environment variable in Cloud Run:
-   ```
-   DATABASE_URL=postgresql://user:password@/dbname?host=/cloudsql/PROJECT:REGION:INSTANCE
-   ```
-3. Connect Cloud Run service to Cloud SQL
+**Tech:** FastAPI + PostgreSQL + Cloud Run with auto-deploy on push to `main`
 
 ---
 
@@ -160,48 +154,56 @@ Dashboard & Asset Management
 
 ---
 
-## Running Locally
+## Quick Start
 
-Install dependencies:
+### Local Development
 
-```
+```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-Setup database:
-
-```
+# Setup database (creates tables and seeds demo user)
 python scripts/setup_database.py
-```
 
-Run server:
-
-```
+# Run development server
 uvicorn backend.main:app --reload
 ```
 
-Visit: [http://localhost:8000](http://localhost:8000)
+Visit: http://localhost:8000/app/
+
+### Production Deployment (Google Cloud Run)
+
+**Automatic deployment is configured!** Just push to `main`:
+
+```bash
+git push origin main
+```
+
+The Cloud Build trigger automatically builds and deploys to Cloud Run.
+
+**First-time setup:**
+1. Follow [CLOUD_SQL_SETUP.md](CLOUD_SQL_SETUP.md) to create PostgreSQL database
+2. Or run the automated script in Cloud Shell:
+   ```bash
+   bash scripts/setup_cloud_sql.sh YOUR_PROJECT_ID
+   ```
 
 ---
 
-## Docker Deployment
+## Configuration
 
-```
-docker compose up --build
-docker compose exec app python scripts/setup_database.py
-```
+Copy `.env.example` to `.env` and configure:
 
----
+**Required:**
+- `SECRET_KEY` - Random secret for JWT signing
+- `DATABASE_URL` - PostgreSQL connection string
 
-## Environment Variables
+**Optional:**
+- `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` - For GitHub OAuth
+- `MAILGUN_API_KEY` / `MAILGUN_DOMAIN` - For email alerts
+- `NVD_API_KEY` - For CVE data (higher rate limits)
 
-```
-SECRET_KEY=your-secret-key
-DATABASE_URL=postgresql+psycopg2://...
-GITHUB_CLIENT_ID=...
-GITHUB_CLIENT_SECRET=...
-MAILGUN_API_KEY=...
-```
+See [.env.example](.env.example) for full configuration options.
 
 ---
 
@@ -219,12 +221,19 @@ MAILGUN_API_KEY=...
 ## Repository Structure
 
 ```
-backend/        FastAPI app, routers, models, services
-frontend/       SPA UI
-scripts/        Setup utilities
-tests/          Test suite
-Dockerfile      Container build
-docker-compose.yml
+backend/              FastAPI app, routers, models, services
+  ├── routers/        API endpoints
+  ├── services/       Business logic & external API integrations
+  ├── models/         SQLAlchemy ORM models
+  └── database/       DB connection & seeding
+frontend/             Vanilla JS SPA
+scripts/              Deployment & setup utilities
+tests/                pytest test suite
+.github/workflows/    CI/CD pipelines
+  ├── ci.yml          Tests on PR
+  └── deploy.yml      Auto-deploy on push
+cloudbuild.yaml       Cloud Build configuration
+Dockerfile            Container image
 ```
 
 ---
