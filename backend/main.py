@@ -27,6 +27,28 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting CyberSec Alert SaaS...")
     
+    # Initialize database tables and seed demo data
+    try:
+        from backend.database.db import get_async_engine, Base
+        from backend.database.seed import seed_database
+        
+        logger.info("Initializing database tables...")
+        async_engine = get_async_engine()
+        
+        # Create tables if they don't exist
+        async with async_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        
+        logger.info("Database tables initialized")
+        
+        # Seed demo user if needed
+        await seed_database()
+        logger.info("Database seeding complete")
+        
+    except Exception as e:
+        logger.error(f"Database initialization error: {e}")
+        # Continue startup even if seeding fails
+    
     # Start scheduler
     if not os.getenv("DISABLE_SCHEDULER"):
         scheduler.start()
